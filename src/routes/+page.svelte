@@ -1,2 +1,9 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation</p>
+
+<form action="/create_room" method="post">
+	<fieldset>
+		<legend>Create room</legend>
+		<label for="name" />
+		<input type="text" id="name" name="name" />
+		<button type="submit">Create</button>
+	</fieldset>
+</form>
