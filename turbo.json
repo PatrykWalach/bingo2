@@ -1,0 +1,42 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"globalEnv": ["ORIGIN", "PORT", "HOST"],
+	"pipeline": {
+		"build": {
+			"outputs": [".svelte-kit/**", ".vercel/**"],
+			"inputs": [
+				"src/**",
+				"vite.config.ts",
+				"tailwind.config.ts",
+				"svelte.config.js",
+				"postcss.config.cjs"
+			],
+			"env": ["VERCEL"],
+			"dependsOn": ["generate"]
+		},
+		"lint": {},
+		"test": {
+			"outputs": ["playwright-report/**"],
+			"inputs": ["tests/**", "src/main/**", "playwright.config.ts"],
+			"env": ["CI"]
+		},
+		"check": {
+			"dependsOn": ["sync", "generate"]
+		},
+		"sync": { "outputs": [".svelte-kit/**"] },
+		"dev": {
+			"cache": false,
+			"persistent": true,
+			"dependsOn": ["generate"]
+		},
+		"generate": {
+			"inputs": ["prisma/schema.prisma"],
+			"outputs": ["node_modules/@prisma/client/**"]
+		},
+		"preview": {
+			"cache": false,
+			"persistent": true,
+			"dependsOn": ["build"]
+		}
+	}
+}

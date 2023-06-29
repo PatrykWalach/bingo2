@@ -2,6 +2,7 @@ module.exports = {
 	root: true,
 	extends: [
 		'eslint:recommended',
+		'turbo',
 		'plugin:@typescript-eslint/recommended',
 		'plugin:svelte/recommended',
 		'prettier'
@@ -27,4 +28,4 @@ module.exports = {
 			}
 		}
 	]
-};
+}
