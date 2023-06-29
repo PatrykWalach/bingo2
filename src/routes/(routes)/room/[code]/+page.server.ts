@@ -100,7 +100,7 @@ export const actions: Actions = {
 				}
 			})
 		} catch (e) {
-			throw e
+			console.error(e);throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)
@@ -141,7 +141,7 @@ export const actions: Actions = {
 				}
 			})
 		} catch (e) {
-			throw e
+			console.error(e);throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)
@@ -163,7 +163,7 @@ export const actions: Actions = {
 				}
 			})
 		} catch (e) {
-			throw e
+			console.error(e);throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)
@@ -185,7 +185,7 @@ export const actions: Actions = {
 				}
 			})
 		} catch (e) {
-			throw e
+			console.error(e);throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)
@@ -237,7 +237,7 @@ export const actions: Actions = {
 				)
 			})
 		} catch (e) {
-			throw e
+			console.error(e);throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)
@@ -258,7 +258,7 @@ function getRandomElements<T>(array: readonly T[], n: number): T[] {
 	const shuffled = array.slice() // Create a shallow copy of the array
 	let currentIndex = shuffled.length
 	let temporaryValue, randomIndex
-	let firstIndex = Math.max(shuffled.length - n, 0)
+	const firstIndex = Math.max(shuffled.length - n, 0)
 
 	// While there remain elements to shuffle
 	while (currentIndex > firstIndex) {

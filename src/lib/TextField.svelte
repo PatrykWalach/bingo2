@@ -6,6 +6,7 @@
 	import { formFieldProxy } from 'sveltekit-superforms/client'
 	import type { AnyZodObject, z } from 'zod'
 
+	/* eslint-disable-next-line @typescript-eslint/no-unused-vars, no-undef */
 	type T = $$Generic<AnyZodObject>
 
 	export let form: SuperForm<ZodValidation<T>, unknown>
@@ -14,7 +15,7 @@
 
 	$: inputId = id ?? String(field)
 
-	const { value, errors, constraints } = formFieldProxy(form, field)
+	const {  errors, constraints } = formFieldProxy(form, field)
 </script>
 
 <div class="form-control">

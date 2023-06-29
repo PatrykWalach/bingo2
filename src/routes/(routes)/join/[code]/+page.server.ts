@@ -61,7 +61,7 @@ export const actions: Actions = {
 				console.error(e)
 				return setError(form, '', 'Bingo is not avalible anymore!')
 			}
-			throw e
+			console.error(e);throw e
 		}
 
 		const maxAge = 365 * 24 * 60
