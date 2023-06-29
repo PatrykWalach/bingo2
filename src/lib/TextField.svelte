@@ -15,7 +15,7 @@
 
 	$: inputId = id ?? String(field)
 
-	const {  errors, constraints } = formFieldProxy(form, field)
+	const { errors, constraints } = formFieldProxy(form, field)
 </script>
 
 <div class="form-control">

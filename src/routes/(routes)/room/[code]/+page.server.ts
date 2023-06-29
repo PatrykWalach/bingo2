@@ -100,7 +100,8 @@ export const actions: Actions = {
 				}
 			})
 		} catch (e) {
-			console.error(e);throw e
+			console.error(e)
+			throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)
@@ -141,7 +142,8 @@ export const actions: Actions = {
 				}
 			})
 		} catch (e) {
-			console.error(e);throw e
+			console.error(e)
+			throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)
@@ -163,7 +165,8 @@ export const actions: Actions = {
 				}
 			})
 		} catch (e) {
-			console.error(e);throw e
+			console.error(e)
+			throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)
@@ -185,7 +188,8 @@ export const actions: Actions = {
 				}
 			})
 		} catch (e) {
-			console.error(e);throw e
+			console.error(e)
+			throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)
@@ -237,7 +241,8 @@ export const actions: Actions = {
 				)
 			})
 		} catch (e) {
-			console.error(e);throw e
+			console.error(e)
+			throw e
 		}
 
 		throw redirect(303, `/room/${event.params.code}`)

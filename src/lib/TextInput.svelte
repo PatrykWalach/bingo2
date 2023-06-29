@@ -3,7 +3,7 @@
 	import type { SuperForm } from 'sveltekit-superforms/client'
 	import { formFieldProxy } from 'sveltekit-superforms/client'
 	import type { AnyZodObject, z } from 'zod'
-	
+
 	/* eslint-disable-next-line @typescript-eslint/no-unused-vars, no-undef */
 	type T = $$Generic<AnyZodObject>
 
