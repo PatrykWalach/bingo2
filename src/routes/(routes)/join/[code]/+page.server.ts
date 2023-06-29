@@ -13,13 +13,9 @@ const joinRoomSchema = z.object({
 })
 
 export const load: ServerLoad = (event) => {
-	 
 	return {
 		avatars,
-		form: superValidate(
-			createPlayer(),
-			joinRoomSchema
-		)
+		form: superValidate(createPlayer(), joinRoomSchema)
 	}
 }
 

@@ -7,7 +7,6 @@
 
 	const create = superForm(data.create)
 	const { errors: createErrors, formId: createId } = create
-
 </script>
 
 <div class="flex min-h-screen flex-col">

@@ -1,5 +1,5 @@
-import { TOKEN } from "$lib/constants"
-import type { ServerLoad } from "@sveltejs/kit"
+import { TOKEN } from '$lib/constants'
+import type { ServerLoad } from '@sveltejs/kit'
 
 export const load: ServerLoad = (event) => {
 	return {

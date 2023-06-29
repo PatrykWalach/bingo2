@@ -44,16 +44,15 @@ export const actions: Actions = {
 		if (!room) {
 			return setError(form, 'code', 'Room not found!')
 		}
-		
+
 		if (room._count.players > 0) {
 			throw redirect(303, `/room/${form.data.code}`)
 		}
-		
+
 		if (room.state === State.SETUP) {
 			throw redirect(303, `/join/${form.data.code}`)
 		}
 
 		return setError(form, 'code', 'Room not avalible!')
-
 	}
 }
