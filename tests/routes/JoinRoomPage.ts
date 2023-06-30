@@ -1,3 +1,1 @@
-export default class JoinRoomPage {
-	
-}
+export default class JoinRoomPage {}
