@@ -150,7 +150,6 @@ export const actions: Actions = {
 
 		event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
 
-
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	lock_room: async (event) => {
@@ -252,7 +251,7 @@ export const actions: Actions = {
 			console.error(e)
 			throw e
 		}
-		
+
 		event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
 
 		throw redirect(303, `/room/${event.params.code}`)
