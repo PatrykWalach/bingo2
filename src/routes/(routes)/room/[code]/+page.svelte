@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { enhance } from '$app/forms'
 	import TextInput from '$lib/TextInput.svelte'
 	import { Role, State } from '$lib/constants'
+	import { socketId } from '$lib/socket'
 	import { superForm } from 'sveltekit-superforms/client'
 	import type { PageData } from './$types'
 
@@ -141,9 +143,10 @@
 				</p>
 			</div>
 
-			<form method="post" action="?/delete_tile" class="modal-action">
+			<form use:enhance method="post" action="?/delete_tile" class="modal-action">
 				<input type="hidden" value={tile.id} name="id" />
-				<button class="btn-error btn" type="submit">delete</button>
+				<button class="btn-error btn cursor-default" type="submit">delete</button>
+				<input type="hidden" value={$socketId} name="socketId" />
 			</form>
 		</div>
 		<label class="modal-backdrop" for="delete-tile-{tile.id}">Close</label>
