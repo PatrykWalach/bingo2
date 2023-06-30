@@ -13,7 +13,6 @@
 	<title>Create room</title>
 </svelte:head>
 
-
 <div class="flex min-h-screen flex-col">
 	<main class="flex flex-1 items-center justify-center p-4">
 		<div class="card bg-base-200 text-base-content">
