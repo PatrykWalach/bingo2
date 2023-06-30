@@ -5,7 +5,7 @@
 
 	export let data: PageData
 
-	const join = superForm(data.form, {})
+	const join = superForm(data.form, { taintedMessage: null })
 	const { errors: joinErrors, formId: joinId } = join
 </script>
 
