@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test';
-import CreateRoomPage from './JoinRoomPage';
+import CreateRoomPage from './CreateRoomPage';
 
 export default class HomePage {
 	async navigateToCreateRoom() {
