@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test'
 import JoinRoomPage from './JoinRoomPage'
 
 export default class CreateRoomPage {
-	async createRoom() {
+	async submit() {
 		await this.main.getByRole('button', { name: 'create' }).click()
 		await expect.soft(this.page).toHaveTitle('Join room')
 		return new JoinRoomPage(this.page)

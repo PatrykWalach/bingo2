@@ -17,14 +17,14 @@ export default class JoinRoomPage {
 		await this.main.getByLabel('name').fill(name)
 	}
 
-	async joinRoom() {
+	async submit() {
 		await this.main
 			.getByRole('button', {
 				name: 'Join'
 			})
 			.click()
 		await expect.soft(this.page).toHaveTitle(/Room.*/)
-		return new RoomPage()
+		return new RoomPage(this.page)
 	}
 	main: Locator
 
