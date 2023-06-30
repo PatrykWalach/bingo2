@@ -12,7 +12,7 @@ permissions:
 env:
   POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
   POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
-  
+
 jobs:
   e2e-test:
     runs-on: ubuntu-latest
