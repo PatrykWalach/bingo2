@@ -7,13 +7,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
+  provider          = "postgresql"
+  url               = env("POSTGRES_PRISMA_URL")
+  directUrl         = env("POSTGRES_URL_NON_POOLING")
   shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING")
 }
-
-// bingo2-postgres
 
 model User {
   id    String   @id @default(uuid())
@@ -22,17 +20,18 @@ model User {
   secret String @unique
 }
 
-// enum Role {
-// GAME_MASTER
-// PLAYER
-// }
 
-// enum State {
-// SETUP
-// LOCKED
-// RUNNING
-// DONE
-// }
+enum Role {
+  GAME_MASTER
+  PLAYER
+}
+
+enum State {
+  SETUP
+  LOCKED
+  RUNNING
+  DONE
+}
 
 model Player {
   room         Bingo       @relation(references: [code], fields: [roomCode])
@@ -42,7 +41,7 @@ model Player {
   name         String
   color        String      @default("red")
   avatar       String      @default("/wolf_64.png")
-  role         String      @default("PLAYER")
+  role         Role        @default(PLAYER)
   board        BoardTile[]
   createdTiles Tile[]
 
@@ -61,11 +60,11 @@ model BoardTile {
 }
 
 model Tile {
-  id               String      @id @default(uuid())
-  content          String
-  isComplete       Boolean     @default(false)
-  boards           BoardTile[]
-  author           Player      @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
+  id         String      @id @default(uuid())
+  content    String
+  isComplete Boolean     @default(false)
+  boards     BoardTile[]
+  author     Player      @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
   roomCode   String
   userSecret String
 }
@@ -73,9 +72,8 @@ model Tile {
 model Bingo {
   code    String   @id
   name    String
-  state   String   @default("SETUP")
+  state   State    @default(SETUP)
   players Player[]
-
-
+  
   @@map("Room")
 }

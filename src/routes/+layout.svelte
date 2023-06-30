@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css'
 
+
 	import { invalidateAll } from '$app/navigation'
 
 	import { page } from '$app/stores'

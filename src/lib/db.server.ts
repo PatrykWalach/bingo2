@@ -9,14 +9,14 @@ export const client = new PrismaClient({
 export type Client = typeof client
 
 export const avatars = [
-	'/penguin_64.png',
-	'/polar_bear_64.png',
-	'/reindeer_64.png',
-	'/seal_64.png',
-	'/snowy_owl_64.png',
-	'/walrus_64.png',
-	'/wolf_64.png',
-	'/squirrel_64.png'
+	{ alt: 'penguin', url: '/penguin_64.png' },
+	{ alt: 'polar bear', url: '/polar_bear_64.png' },
+	{ alt: 'reindeer', url: '/reindeer_64.png' },
+	{ alt: 'seal', url: '/seal_64.png' },
+	{ alt: 'snowy owl', url: '/snowy_owl_64.png' },
+	{ alt: 'walrus', url: '/walrus_64.png' },
+	{ alt: 'wolf', url: '/wolf_64.png' },
+	{ alt: 'squirrel', url: '/squirrel_64.png' }
 ] as const
 
 export function createAvatar() {
@@ -25,7 +25,7 @@ export function createAvatar() {
 
 export function createPlayer() {
 	return {
-		avatar: createAvatar(),
+		avatar: createAvatar().url,
 		color: faker.color.rgb(),
 		name: faker.internet.displayName()
 	}

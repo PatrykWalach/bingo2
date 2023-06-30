@@ -10,7 +10,6 @@ permissions:
   contents: read
 
 env:
-  DATABASE_URL: file:./dev.db
   PUSHER_APP_ID: ${{ secrets.PUSHER_APP_ID }}
   PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}
   PUBLIC_PUSHER_KEY: ${{ vars.PUBLIC_PUSHER_KEY }}
@@ -50,8 +49,20 @@ jobs:
         run: npx playwright install --with-deps
         if: steps.playwright-cache.outputs.cache-hit != 'true'
 
+
+
+      - name: Install postgresql
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql password: dipping-culture
+          postgresql db: devdb
+
       - name: Run E2E tests 🧪
         run: npm exec turbo test -- -- --project=${{ matrix.project }}
+        env:
+          POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
+          POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
+
 
       - name: Upload test results
         if: always()
