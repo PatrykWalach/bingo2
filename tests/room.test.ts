@@ -1,18 +1,10 @@
 import { test } from '@playwright/test'
+import HomePage from './routes/HomePage'
 
 test('create room', async ({ page }) => {
 	await page.goto('/')
-	await page
-		.getByRole('main')
+	const home = new HomePage(page)
+	const createroom = await home.navigateToCreateRoom()
 
-		.getByLabel('name')
-		.fill('Gierka')
-
-	await page
-		.getByRole('main')
-
-		.getByRole('button', {
-			name: 'Create'
-		})
-		.click()
+	await createroom.createRoom({ name: 'Gierka' })
 })
