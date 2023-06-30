@@ -16,9 +16,9 @@
 	$: players = data.LayoutViewer.room.players.sort(comparingNumber((player) => player._count.board))
 </script>
 
-<div class="w-full mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+<div class="mx-auto w-full max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
 	<div class="">
-		<main class="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+		<main class="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
 			<section class="flex flex-col gap-4">
 				<h1>{data.LayoutViewer.room.name}</h1>
 
@@ -56,11 +56,14 @@
 			</section>
 			<section class="grid gap-2 xl:col-span-2">
 				<nav class="tabs tabs-boxed grid grid-cols-2">
-					<a data-sveltekit-replacestate href="/room/{$page.params.code}" class="tab tab-active">Tiles</a>
+					<a data-sveltekit-replacestate href="/room/{$page.params.code}" class="tab tab-active">
+						Tiles
+					</a>
 					<a
 						href={isRunning || isDone ? '/room/{$page.params.code}/board' : undefined}
 						class="tab {isRunning || isDone ? '' : 'tab-disabled'}"
-            data-sveltekit-replacestate	>
+						data-sveltekit-replacestate
+					>
 						Board
 					</a>
 				</nav>

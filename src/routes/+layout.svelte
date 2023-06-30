@@ -27,10 +27,6 @@
 				console.log('bind', pathname)
 				channel.bind('invalidate', callback)
 
-
-
-		
-
 				clean = () => {
 					console.log('unbind', pathname)
 					channel.unbind('invalidate', callback)

@@ -8,8 +8,6 @@
 
 	const join = superForm(data.form, {})
 	const { errors: joinErrors, formId: joinId, form } = join
-
- 
 </script>
 
 <svelte:head>
