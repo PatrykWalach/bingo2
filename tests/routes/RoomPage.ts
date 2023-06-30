@@ -1,3 +1,1 @@
-
-
-export default class RoomPage{}
+export default class RoomPage {}

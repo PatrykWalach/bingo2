@@ -9,7 +9,6 @@
 	const { errors: joinErrors, formId: joinId, form } = join
 </script>
 
-
 <svelte:head>
 	<title>Join room</title>
 </svelte:head>
