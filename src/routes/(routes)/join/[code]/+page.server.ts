@@ -1,14 +1,14 @@
 import { Role, State, TOKEN } from '$lib/constants'
 import { avatars, createPlayer, createUser } from '$lib/db.server'
 import { Prisma } from '@prisma/client'
-import { fail, redirect, type ServerLoad } from '@sveltejs/kit'
+import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
 import { setError, superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import type { Actions } from './$types'
 
 const joinRoomSchema = z.object({
 	name: z.string(),
-	avatar: z.enum(avatars),
+	avatar: z.string(),
 	color: z.string()
 })
 
@@ -28,6 +28,10 @@ export const actions: Actions = {
 		}
 
 		const secret = event.cookies.get(TOKEN) ?? crypto.randomUUID()
+
+		if (!avatars.some(({ url }) => url === form.data.avatar)) {
+			throw error(400, 'Avatar not valid!')
+		}
 
 		try {
 			await event.locals.db.player.upsert({
