@@ -122,5 +122,11 @@ jobs:
       - name: Install dependencies 📦
         run: npm ci
 
+      - name: Install postgresql
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql password: dipping-culture
+          postgresql db: devdb
+
       - name: Svelte Check
         run: npm exec turbo check
