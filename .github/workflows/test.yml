@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+env:
+  POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
+  POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
+  
 jobs:
   e2e-test:
     runs-on: ubuntu-latest
@@ -52,9 +56,6 @@ jobs:
 
       - name: Run E2E tests 🧪
         run: npm exec turbo test -- -- --project=${{ matrix.project }}
-        env:
-          POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
-          POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
 
       - name: Upload test results
         if: always()
