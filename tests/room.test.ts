@@ -12,5 +12,5 @@ test('create room', async ({ page }) => {
 	await joinRoomPage.setAvatar('snowy owl')
 	await joinRoomPage.setColor('#fca15c')
 	await joinRoomPage.setName('Foo')
-	await joinRoomPage.joinRoom();
+	await joinRoomPage.joinRoom()
 })
