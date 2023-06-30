@@ -11,114 +11,85 @@
 	const form = superForm(data.create)
 
 	$: isGameMaster = data.Viewer.role === Role.GAME_MASTER
-	$: isSetup = data.Viewer.room.state === State.SETUP
-	$: isRunning = data.Viewer.room.state === State.RUNNING
-	$: isDone = data.Viewer.room.state === State.DONE
-	$: isLocked = data.Viewer.room.state === State.LOCKED
+	$: isSetup = data.LayoutViewer.room.state === State.SETUP
+	$: isRunning = data.LayoutViewer.room.state === State.RUNNING
+	$: isDone = data.LayoutViewer.room.state === State.DONE
+	$: isLocked = data.LayoutViewer.room.state === State.LOCKED
 </script>
 
 <svelte:head>
-	<title>Room - {data.Viewer.room.name}</title>
+	<title>Room - {data.LayoutViewer.room.name}</title>
 </svelte:head>
 
-<div class="">
-	<div class="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-		<main class="grid gap-2">
-			<h1>{data.Viewer.room.name}</h1>
-
-			<div class="form-control">
-				<label class="label" for={'code'}>
-					<span class="label-text">Code</span>
-				</label>
-				<input
-					class="input-bordered input"
-					id="code"
-					type="text"
-					readonly
-					value={data.Viewer.room.code}
-				/>
-			</div>
-
-			<ul>
-				{#each data.Viewer.room.players as player (player.user.id)}
-					<li>
-						<div class="h-2 w-2" />
-						{player.name}
-						<div class="avatar">
-							<div
-								class="w-12 rounded-full ring ring-[--color] ring-offset-2 ring-offset-base-100"
-								style="--color: {player.color}"
-							>
-								<img src={player.avatar} alt="" />
-							</div>
-						</div>
-					</li>
-				{/each}
-			</ul>
-
-			<ul class="grid gap-2">
-				{#each data.Tiles as tile (tile.id)}
-					<li>
-						<div
-							class="card card-compact {tile.isComplete
-								? 'bg-primary-focus text-primary-content'
-								: 'bg-base-200'}"
-						>
-							<div class="card-body flex-row justify-between">
-								<div class="card-title">
-									{tile.content}
-								</div>
-								{#if isGameMaster || data.Viewer.user.id === tile.author.user.id}
-									<div class="card-actions">
-										{#if isGameMaster && isDone}
-											<form action="?/toggle_tile">
-												<button class="btn-primary btn-xs btn" type="submit">complete</button>
-											</form>
-										{/if}
-
-										<label for="delete-tile-{tile.id}" class="btn-error btn-xs btn">delete</label>
-									</div>
-								{/if}
-							</div>
-						</div>
-					</li>
-				{/each}
-			</ul>
-
-			<div class="grid gap-2">
-				{#if isSetup || (isLocked && isGameMaster)}
-					<form method="post" action="?/create_tile" class="join flex">
-						<TextInput {form} field="content" class="input-primary input join-item flex-1" />
-						<button type="submit" class="btn-primary join-item btn">Create</button>
-					</form>
-				{/if}
-
-				{#if isRunning || isDone}
-					<a href="/" class="btn-primary btn w-full">Board</a>
-					<a href="/" class="btn-primary btn w-full">Leaderboard</a>
-				{/if}
-
-				{#if (isSetup || isLocked) && isGameMaster}
-					<div class="divider">Game master</div>
-					<form method="post">
-						<fieldset class="grid gap-2">
-							<legend class="sr-only">Game master</legend>
-							{#if isSetup}
-								<button type="submit" formaction="?/lock_room" class="btn-accent btn">Lock</button>
-							{:else if isLocked}
-								<button type="submit" class="btn-primary btn" formaction="?/start_bingo">
-									Start
-								</button>
-								<button type="submit" class="btn-accent btn" formaction="?/unlock_bingo">
-									Unlock
-								</button>
+<ul class="grid gap-2">
+	{#each data.Tiles as tile (tile.id)}
+		<li>
+			<div
+				class="card card-compact {tile.isComplete
+					? 'bg-primary-focus text-primary-content'
+					: 'bg-base-200'}"
+			>
+				<div class="card-body flex-row justify-between">
+					<div class="card-title">
+						{tile.content}
+					</div>
+					{#if isGameMaster || data.Viewer.user.id === tile.author.user.id}
+						<div class="card-actions">
+							{#if isGameMaster && isDone}
+								<form action="?/toggle_tile" use:enhance>
+									<button class="btn-primary btn-xs btn cursor-default" type="submit">
+										complete
+									</button>
+									<input type="hidden" value={$socketId} name="socketId" />
+								</form>
 							{/if}
-						</fieldset>
-					</form>
-				{/if}
+
+							<label for="delete-tile-{tile.id}" class="btn-error btn-xs btn">delete</label>
+						</div>
+					{/if}
+				</div>
 			</div>
-		</main>
-	</div>
+		</li>
+	{:else}
+		<li>No tiles yet, create some</li>
+	{/each}
+</ul>
+
+<div class="grid gap-2">
+	{#if isSetup || (isLocked && isGameMaster)}
+		<form use:enhance method="post" action="?/create_tile" class="join flex">
+			<TextInput {form} field="content" class="input-primary input join-item flex-1" />
+			<button type="submit" class="btn-primary join-item btn cursor-default">Create</button>
+			<input type="hidden" value={$socketId} name="socketId" />
+		</form>
+	{/if}
+
+	{#if isRunning || isDone}
+		<a href="/" class="btn-primary btn w-full">Board</a>
+		<a href="/" class="btn-primary btn w-full">Leaderboard</a>
+	{/if}
+
+	{#if (isSetup || isLocked) && isGameMaster}
+		<div class="divider">Game master</div>
+		<form use:enhance method="post">
+			<fieldset class="grid gap-2">
+				<legend class="sr-only">Game master</legend>
+				{#if isSetup}
+					<button type="submit" formaction="?/lock_room" class="btn-accent btn cursor-default">
+						Lock
+					</button>
+				{:else if isLocked}
+					<button type="submit" class="btn-primary btn cursor-default" formaction="?/start_bingo">
+						Start
+					</button>
+					<button type="submit" class="btn-accent btn cursor-default" formaction="?/unlock_bingo">
+						Unlock
+					</button>
+				{/if}
+			</fieldset>
+			<input type="hidden" value={$socketId} name="socketId" />
+		</form>
+	{/if}
 </div>
 
 <footer class="sr-only">

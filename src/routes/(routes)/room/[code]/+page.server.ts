@@ -11,61 +11,65 @@ const create = z.object({
 })
 
 export const load: ServerLoad = (event) => {
-	return {
-		create: superValidate(create),
-		Tiles: event.locals.db.tile.findMany({
-			where: {
-				roomCode: String(event.params.code)
-			},
-			select: {
-				content: true,
-				id: true,
-				isComplete: true,
-				author: {
-					select: {
-						avatar: true,
-						name: true,
-						user: {
-							select: {
-								id: true
+	try {
+		return {
+			create: superValidate(create),
+			Tiles: event.locals.db.tile.findMany({
+				where: {
+					roomCode: String(event.params.code)
+				},
+				select: {
+					content: true,
+					id: true,
+					isComplete: true,
+					author: {
+						select: {
+							avatar: true,
+							name: true,
+							user: {
+								select: {
+									id: true
+								}
 							}
 						}
 					}
 				}
-			}
-		}),
-		Viewer: event.locals.db.player.findUniqueOrThrow({
-			where: {
-				roomCode_userSecret: {
-					roomCode: String(event.params.code),
-					userSecret: String(event.cookies.get(TOKEN))
-				}
-			},
+			}),
+			Viewer: event.locals.db.player.findUniqueOrThrow({
+				where: {
+					roomCode_userSecret: {
+						roomCode: String(event.params.code),
+						userSecret: String(event.cookies.get(TOKEN))
+					}
+				},
 
-			select: {
-				role: true,
-				user: { select: { id: true } },
-				room: {
-					select: {
-						code: true,
-						name: true,
-						state: true,
-						players: {
-							select: {
-								color: true,
-								avatar: true,
-								name: true,
-								user: {
-									select: {
-										id: true
+				select: {
+					role: true,
+					user: { select: { id: true } },
+					room: {
+						select: {
+							players: {
+								select: {
+									color: true,
+									avatar: true,
+									name: true,
+									user: {
+										select: {
+											id: true
+										}
 									}
 								}
 							}
 						}
 					}
 				}
-			}
-		})
+			})
+		}
+	} catch (e) {
+		if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+			throw error(404, 'Not found!')
+		}
+		throw e
 	}
 }
 

@@ -8,6 +8,8 @@
 
 	const join = superForm(data.form, {})
 	const { errors: joinErrors, formId: joinId, form } = join
+
+ 
 </script>
 
 <svelte:head>
@@ -63,7 +65,7 @@
 						<TextField form={join} field="name">Name</TextField>
 
 						<div class="form-control mt-6">
-							<button type="submit" class="btn-primary btn">Join</button>
+							<button type="submit" class="btn-primary btn cursor-default">Join</button>
 						</div>
 					</fieldset>
 				</form>

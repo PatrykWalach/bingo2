@@ -30,7 +30,7 @@
 							Name
 						</TextField>
 						<div class="form-control mt-6">
-							<button type="submit" class="btn-primary btn">Create</button>
+							<button type="submit" class="btn-primary btn cursor-default">Create</button>
 						</div>
 					</fieldset>
 				</form>
