@@ -12,7 +12,7 @@
 		"lint": "eslint .",
 		"prettier": "prettier --cache --cache-strategy content",
 		"format": "npm run prettier -- --write .",
-		"generate": "prisma generate"
+		"generate": "prisma migrate deploy && prisma generate"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^8.0.2",
