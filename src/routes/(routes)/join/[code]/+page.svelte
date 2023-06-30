@@ -37,27 +37,21 @@
 							<ul class="flex flex-wrap gap-2">
 								{#each data.avatars as avatar}
 									<li>
-
 										<label class="btn-active btn-circle btn" data-testid="avatar-label">
-
 											<div class="avatar">
 												<input
 													type="radio"
 													name="avatar"
-
 													value={avatar.url}
 													checked={$form.avatar === avatar.url}
-
 													class="peer hidden"
 												/>
 												<div
 													class="w-12 rounded-full ring-[--color] ring-offset-2 ring-offset-base-100 peer-checked:ring"
 													style="--color: {$form.color}"
 												>
-
 													<img src={avatar.url} alt={avatar.alt} />
 													<div class="sr-only">{avatar.alt}</div>
-
 												</div>
 											</div>
 										</label>

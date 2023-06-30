@@ -8,7 +8,6 @@
 
 	const form = superForm(data.create)
 
-
 	$: isGameMaster = data.Viewer.role === Role.GAME_MASTER
 	$: isSetup = data.Viewer.room.state === State.SETUP
 	$: isRunning = data.Viewer.room.state === State.RUNNING

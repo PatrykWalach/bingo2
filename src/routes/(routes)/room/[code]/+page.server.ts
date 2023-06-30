@@ -104,9 +104,7 @@ export const actions: Actions = {
 			throw e
 		}
 
-
 		event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
-
 
 		throw redirect(303, `/room/${event.params.code}`)
 	},
@@ -150,7 +148,7 @@ export const actions: Actions = {
 			throw e
 		}
 
-event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
+		event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	lock_room: async (event) => {
@@ -174,7 +172,7 @@ event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), '
 			throw e
 		}
 
-event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
+		event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	unlock_bingo: async (event) => {
@@ -197,7 +195,7 @@ event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), '
 			console.error(e)
 			throw e
 		}
-event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
+		event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
 
 		throw redirect(303, `/room/${event.params.code}`)
 	},
@@ -251,7 +249,7 @@ event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), '
 			console.error(e)
 			throw e
 		}
-event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
+		event.locals.pusher.trigger(`/room/${event.params.code}`.replaceAll('/', '-'), 'invalidate', {})
 		throw redirect(303, `/room/${event.params.code}`)
 	}
 }

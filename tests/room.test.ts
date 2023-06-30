@@ -1,5 +1,3 @@
-
-
 import { expect, test } from '@playwright/test'
 import HomePage from './routes/HomePage'
 
@@ -56,6 +54,4 @@ test('join room', async ({ browser }) => {
 
 	await gameMasterContext.close()
 	await playerContext.close()
-
-  
 })
