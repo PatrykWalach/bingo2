@@ -5,7 +5,7 @@ export default class CreateRoomPage {
 	async createRoom(args: { name: string }) {
 		await this.name.fill(args.name)
 		await this.main.getByRole('button', { name: 'create' }).click()
-    return new RoomPage()
+		return new RoomPage()
 	}
 	main: Locator
 	name: Locator
