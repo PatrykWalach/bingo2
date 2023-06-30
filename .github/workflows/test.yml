@@ -9,9 +9,6 @@ on:
 permissions:
   contents: read
 
-env:
-  POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
-  POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
 
 jobs:
   e2e-test:
@@ -56,7 +53,10 @@ jobs:
 
       - name: Run E2E tests 🧪
         run: npm exec turbo test -- -- --project=${{ matrix.project }}
-
+        env:
+          POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
+          POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
+        
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v3
@@ -122,11 +122,7 @@ jobs:
       - name: Install dependencies 📦
         run: npm ci
 
-      - name: Install postgresql
-        uses: harmon758/postgresql-action@v1
-        with:
-          postgresql password: dipping-culture
-          postgresql db: devdb
+
 
       - name: Svelte Check
         run: npm exec turbo check
