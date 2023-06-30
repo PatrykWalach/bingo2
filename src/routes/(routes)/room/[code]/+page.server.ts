@@ -262,7 +262,7 @@ export const actions: Actions = {
 }
 
 function getSocketId(data: FormData) {
-	let socketId = data.get('socketId')
+	const socketId = data.get('socketId')
 	if (typeof socketId === 'string') {
 		return socketId
 	}
@@ -272,7 +272,9 @@ async function getTokenId(event: RequestEvent) {
 	try {
 		const data = await event.request.formData()
 		return getSocketId(data)
-	} catch {}
+	} catch (e) {
+		console.error(e)
+	}
 }
 
 function invalidateRoom(event: RequestEvent, socketId: string | undefined) {
