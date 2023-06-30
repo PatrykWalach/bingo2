@@ -16,7 +16,7 @@
 
 <div class="flex min-h-screen flex-col">
 	<main class="flex flex-1 items-center justify-center p-4">
-		<div class="card bg-base-200 text-primary-content">
+		<div class="card bg-base-200 text-base-content">
 			<div class="card-body">
 				<form action="?/create_room" method="post" use:create.enhance>
 					<fieldset>

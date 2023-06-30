@@ -8,10 +8,10 @@
 
 	const form = superForm(data.create)
 
-	$: isSetup = data.Viewer.room.state === State.SETUP
 	$: isGameMaster = data.Viewer.role === Role.GAME_MASTER
+	$: isSetup = data.Viewer.room.state === State.SETUP
 	$: isRunning = data.Viewer.room.state === State.RUNNING
-	$: isDone = data.Viewer.role === State.DONE
+	$: isDone = data.Viewer.room.state === State.DONE
 	$: isLocked = data.Viewer.room.state === State.LOCKED
 </script>
 
@@ -59,7 +59,7 @@
 					<li>
 						<div
 							class="card card-compact {tile.isComplete
-								? 'bg-primary-focus text-primary-content'
+								? 'bg-primary-focus text-base-content'
 								: 'bg-base-200'}"
 						>
 							<div class="card-body flex-row justify-between">
