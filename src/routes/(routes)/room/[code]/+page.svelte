@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { enhance } from '$app/forms'
 	import TextInput from '$lib/TextInput.svelte'
 	import { Role, State } from '$lib/constants'
+	import { socketId } from '$lib/socket'
 	import { superForm } from 'sveltekit-superforms/client'
 	import type { PageData } from './$types'
 
@@ -59,7 +61,7 @@
 					<li>
 						<div
 							class="card card-compact {tile.isComplete
-								? 'bg-primary-focus text-base-content'
+								? 'bg-primary-focus text-primary-content'
 								: 'bg-base-200'}"
 						>
 							<div class="card-body flex-row justify-between">
@@ -69,8 +71,9 @@
 								{#if isGameMaster || data.Viewer.user.id === tile.author.user.id}
 									<div class="card-actions">
 										{#if isGameMaster && isDone}
-											<form action="?/toggle_tile">
+											<form use:enhance action="?/toggle_tile">
 												<button class="btn-primary btn-xs btn" type="submit">complete</button>
+												<input type="hidden" value={$socketId} name="socketId" />
 											</form>
 										{/if}
 
@@ -85,9 +88,10 @@
 
 			<div class="grid gap-2">
 				{#if isSetup || (isLocked && isGameMaster)}
-					<form method="post" action="?/create_tile" class="join flex">
+					<form use:enhance method="post" action="?/create_tile" class="join flex">
 						<TextInput {form} field="content" class="input-primary input join-item flex-1" />
 						<button type="submit" class="btn-primary join-item btn">Create</button>
+						<input type="hidden" value={$socketId} name="socketId" />
 					</form>
 				{/if}
 
@@ -98,7 +102,7 @@
 
 				{#if (isSetup || isLocked) && isGameMaster}
 					<div class="divider">Game master</div>
-					<form method="post">
+					<form use:enhance method="post">
 						<fieldset class="grid gap-2">
 							<legend class="sr-only">Game master</legend>
 							{#if isSetup}
@@ -112,6 +116,7 @@
 								</button>
 							{/if}
 						</fieldset>
+						<input type="hidden" value={$socketId} name="socketId" />
 					</form>
 				{/if}
 			</div>
@@ -141,9 +146,11 @@
 				</p>
 			</div>
 
-			<form method="post" action="?/delete_tile" class="modal-action">
+			<form use:enhance method="post" action="?/delete_tile" class="modal-action">
 				<input type="hidden" value={tile.id} name="id" />
-				<button class="btn-error btn" type="submit">delete</button>
+				<button class="btn-error btn cursor-default" type="submit">delete</button>
+
+				<input type="hidden" value={$socketId} name="socketId" />
 			</form>
 		</div>
 		<label class="modal-backdrop" for="delete-tile-{tile.id}">Close</label>

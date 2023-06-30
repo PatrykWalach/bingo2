@@ -1,11 +1,13 @@
 import { Role, State, TOKEN } from '$lib/constants'
+import { Prisma } from '@prisma/client'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import type { Actions, RequestEvent } from './$types'
 
 const create = z.object({
-	content: z.string()
+	content: z.string(),
+	socketId: z.coerce.string().optional()
 })
 
 export const load: ServerLoad = (event) => {
@@ -104,6 +106,8 @@ export const actions: Actions = {
 			throw e
 		}
 
+		invalidateRoom(event, form.data.socketId)
+
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	delete_tile: async (event) => {
@@ -146,6 +150,8 @@ export const actions: Actions = {
 			throw e
 		}
 
+		invalidateRoom(event, getSocketId(form))
+
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	lock_room: async (event) => {
@@ -169,6 +175,8 @@ export const actions: Actions = {
 			throw e
 		}
 
+		getTokenId(event).then((socketId) => invalidateRoom(event, socketId))
+
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	unlock_bingo: async (event) => {
@@ -191,6 +199,8 @@ export const actions: Actions = {
 			console.error(e)
 			throw e
 		}
+
+		getTokenId(event).then((socketId) => invalidateRoom(event, socketId))
 
 		throw redirect(303, `/room/${event.params.code}`)
 	},
@@ -245,8 +255,37 @@ export const actions: Actions = {
 			throw e
 		}
 
+		getTokenId(event).then((socketId) => invalidateRoom(event, socketId))
+
 		throw redirect(303, `/room/${event.params.code}`)
 	}
+}
+
+function getSocketId(data: FormData) {
+	const socketId = data.get('socketId')
+	if (typeof socketId === 'string') {
+		return socketId
+	}
+}
+
+async function getTokenId(event: RequestEvent) {
+	try {
+		const data = await event.request.formData()
+		return getSocketId(data)
+	} catch (e) {
+		console.error(e)
+	}
+}
+
+function invalidateRoom(event: RequestEvent, socketId: string | undefined) {
+	return event.locals.pusher.trigger(
+		`/room/${event.params.code}`.replaceAll('/', '-'),
+		'invalidate',
+		{},
+		{
+			socket_id: socketId
+		}
+	)
 }
 
 function getSecretOrThrow(event: RequestEvent) {
