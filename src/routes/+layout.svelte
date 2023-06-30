@@ -8,10 +8,10 @@
 	import { onDestroy, onMount } from 'svelte'
 	import { derived } from 'svelte/store'
 
-	let unsubscriber = () => {}
+	let unsubscriber = (): void => undefined
 
 	onMount(() => {
-		let clean = () => {}
+		let clean = (): void => undefined
 
 		unsubscriber = derived(page, ($page) => $page.url.pathname).subscribe(
 			(pathname) => {
