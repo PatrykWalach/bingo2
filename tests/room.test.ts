@@ -6,5 +6,11 @@ test('create room', async ({ page }) => {
 	const home = new HomePage(page)
 	const createroom = await home.navigateToCreateRoom()
 
-	await createroom.createRoom({ name: 'Gierka' })
+	await createroom.setName('Gierka')
+	const joinRoomPage = await createroom.createRoom()
+
+	await joinRoomPage.setAvatar('snowy owl')
+	await joinRoomPage.setColor('#fca15c')
+	await joinRoomPage.setName('Foo')
+	await joinRoomPage.joinRoom();
 })
