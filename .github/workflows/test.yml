@@ -11,6 +11,9 @@ permissions:
 
 env:
   DATABASE_URL: file:./dev.db
+  PUSHER_APP_ID: ${{ secrets.PUSHER_APP_ID }}
+  PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}
+  PUBLIC_PUSHER_KEY: ${{ vars.PUBLIC_PUSHER_KEY }}
 
 jobs:
   e2e-test:
