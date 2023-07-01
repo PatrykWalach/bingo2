@@ -13,13 +13,13 @@ datasource db {
   shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
-
 model User {
   id    String   @id @default(uuid())
   plays Player[]
 
   secret String @unique
 }
+
 
 enum Role {
   GAME_MASTER
@@ -74,6 +74,6 @@ model Bingo {
   name    String
   state   State    @default(SETUP)
   players Player[]
-
+  
   @@map("Room")
 }

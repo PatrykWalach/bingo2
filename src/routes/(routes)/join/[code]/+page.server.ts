@@ -9,7 +9,8 @@ import type { Actions } from './$types'
 const joinRoomSchema = z.object({
 	name: z.string(),
 	avatar: z.string(),
-	color: z.string()
+	color: z.string(),
+	socketId: z.string().optional()
 })
 
 export const load: ServerLoad = (event) => {
@@ -80,6 +81,14 @@ export const actions: Actions = {
 			maxAge
 		})
 
+		event.locals.pusher.trigger(
+			`/room/${event.params.code}`.replaceAll('/', '-'),
+			'invalidate',
+			{},
+			{
+				socket_id: form.data.socketId
+			}
+		)
 		throw redirect(303, `/room/${event.params.code}`)
 	}
 }

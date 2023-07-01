@@ -1,5 +1,6 @@
 <script lang="ts">
 	import TextField from '$lib/TextField.svelte'
+	import { socketId } from '$lib/socket'
 	import { superForm } from 'sveltekit-superforms/client'
 	import type { PageData } from './$types'
 
@@ -27,9 +28,7 @@
 							{/each}
 						</label>
 						<input type="hidden" name="__superform_id" bind:value={$joinId} />
-
-						<!-- <TextField form={join} field="avatar">Avatar</TextField>
-						-->
+						<input type="hidden" value={$socketId} name="socketId" />
 
 						<fieldset class="form-control">
 							<legend class="label"><span class="label-text">Avatar</span></legend>
