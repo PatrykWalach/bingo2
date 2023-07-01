@@ -128,3 +128,5 @@ jobs:
 
       - name: Svelte Check
         run: npm exec turbo check
+        env:
+          PROXY_PRISMA_URL: ''

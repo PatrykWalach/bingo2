@@ -9,13 +9,9 @@ const config = {
 
 	kit: {
 		adapter: adapter({
-			runtime: 'edge'
-		}),
-		alias: {
-			...(process.env.PRISMA_GENERATE_DATAPROXY
-				? undefined
-				: { '@prisma/client/edge': '@prisma/client' })
-		}
+			runtime: 'edge',
+			external: ['crypto', 'url']
+		})
 	}
 }
 
