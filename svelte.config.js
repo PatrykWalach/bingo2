@@ -12,7 +12,9 @@ const config = {
 			runtime: 'edge'
 		}),
 		alias: {
-			$houdini: './$houdini'
+			...(process.env.PRISMA_GENERATE_DATAPROXY
+				? { '@prisma/client': '@prisma/client/edge' }
+				: undefined)
 		}
 	}
 }

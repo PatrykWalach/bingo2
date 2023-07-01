@@ -1,13 +1,13 @@
-import { POSTGRES_PRISMA_URL } from '$env/static/private'
-import { faker} from '@faker-js/faker/locale/en'
-import { Prisma, PrismaClient } from '@prisma/client/edge'
+import { PROXY_PRISMA_URL } from '$env/static/private'
+import { faker } from '@faker-js/faker/locale/en'
+import { Prisma, PrismaClient } from '@prisma/client'
 import type { Role } from './constants'
 
 export const client = new PrismaClient({
 	errorFormat: 'pretty',
 	datasources: {
 		db: {
-			url: POSTGRES_PRISMA_URL
+			url: PROXY_PRISMA_URL
 		}
 	}
 })
