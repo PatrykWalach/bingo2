@@ -117,6 +117,7 @@
 			<form use:enhance method="post" action="?/delete_tile" class="modal-action">
 				<input type="hidden" value={tile.id} name="id" />
 				<button class="btn-error btn cursor-default" type="submit">delete</button>
+
 				<input type="hidden" value={$socketId} name="socketId" />
 			</form>
 		</div>

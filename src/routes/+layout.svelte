@@ -16,7 +16,6 @@
 
 		unsubscriber = derived(page, ($page) => $page.url.pathname).subscribe(
 			(pathname) => {
-				clean()
 				const channel = pusher.subscribe(pathname.replaceAll('/', '-'))
 
 				function callback() {
