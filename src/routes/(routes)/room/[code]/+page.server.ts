@@ -1,5 +1,5 @@
 import { Role, State, TOKEN } from '$lib/constants'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client/edge'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'

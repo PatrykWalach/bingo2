@@ -1,6 +1,5 @@
 import adapter from '@sveltejs/adapter-vercel'
 import { vitePreprocess } from '@sveltejs/kit/vite'
-import path from 'path'
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -14,8 +13,8 @@ const config = {
 		}),
 		alias: {
 			...(process.env.PRISMA_GENERATE_DATAPROXY
-				? { '@prisma/client': path.resolve('./node_modules/@prisma/client/edge') }
-				: undefined)
+				? undefined
+				: { '@prisma/client/edge': '@prisma/client' })
 		}
 	}
 }
