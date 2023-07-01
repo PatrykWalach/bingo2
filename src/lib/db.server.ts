@@ -1,5 +1,5 @@
 import { POSTGRES_PRISMA_URL } from '$env/static/private'
-import { faker } from '@faker-js/faker'
+import { faker} from '@faker-js/faker/locale/en'
 import { Prisma, PrismaClient } from '@prisma/client/edge'
 import type { Role } from './constants'
 

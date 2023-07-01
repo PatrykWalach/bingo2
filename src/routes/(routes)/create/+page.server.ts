@@ -1,6 +1,6 @@
 import { Role, TOKEN } from '$lib/constants'
 import { addPlayer } from '$lib/db.server'
-import { faker } from '@faker-js/faker'
+import { faker } from '@faker-js/faker/locale/en'
 import { fail, redirect } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
