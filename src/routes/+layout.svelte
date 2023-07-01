@@ -11,10 +11,12 @@
 
 	let unsubscriber = (): void => undefined
 
+	const pathname = derived(page, ($page) => $page.url.pathname)
+
 	onMount(() => {
 		let clean = (): void => undefined
 
-		unsubscriber = derived(page, ($page) => $page.url.pathname).subscribe(
+		unsubscriber = pathname.subscribe(
 			(pathname) => {
 				const channel = pusher.subscribe(pathname.replaceAll('/', '-'))
 
