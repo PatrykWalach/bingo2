@@ -32,7 +32,8 @@
 		"migrate": { "inputs": ["prisma/schema.prisma"] },
 		"generate": {
 			"inputs": ["prisma/schema.prisma"],
-			"outputs": ["node_modules/@prisma/client/**"]
+			"outputs": ["node_modules/@prisma/client/**"],
+			"cache": false
 		},
 		"preview": {
 			"cache": false,
