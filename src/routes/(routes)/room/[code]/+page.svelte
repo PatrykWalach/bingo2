@@ -63,12 +63,12 @@
 		</form>
 	{/if}
 
-	{#if isRunning }
+	{#if isRunning}
 		<a href="/" class="btn-primary btn w-full">Board</a>
 		<a href="/" class="btn-primary btn w-full">Leaderboard</a>
 	{/if}
 
-	{#if ( !isRunning) && isGameMaster}
+	{#if !isRunning && isGameMaster}
 		<div class="divider">Game master</div>
 		<form use:enhance method="post">
 			<fieldset class="grid gap-2">
