@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker'
+import { faker } from '@faker-js/faker/locale/en'
 import { Prisma, PrismaClient } from '@prisma/client'
 import type { Role } from './constants'
 
