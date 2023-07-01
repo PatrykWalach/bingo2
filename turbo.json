@@ -1,6 +1,6 @@
 {
 	"$schema": "https://turbo.build/schema.json",
-	"globalEnv": ["ORIGIN", "PORT", "HOST", "POSTGRES_PRISMA_URL", "POSTGRES_URL_NON_POOLING"],
+	"globalEnv": ["ORIGIN", "PORT", "HOST", "POSTGRES_PRISMA_URL", "POSTGRES_URL_NON_POOLING","VERCEL"],
 	"pipeline": {
 		"build": {
 			"outputs": [".svelte-kit/**", ".vercel/**"],
@@ -11,7 +11,6 @@
 				"svelte.config.js",
 				"postcss.config.cjs"
 			],
-			"env": ["VERCEL"],
 			"dependsOn": ["generate", "migrate"]
 		},
 		"lint": {},
@@ -32,8 +31,7 @@
 		"migrate": { "inputs": ["prisma/schema.prisma"] },
 		"generate": {
 			"inputs": ["prisma/schema.prisma"],
-			"outputs": ["node_modules/@prisma/client/**"],
-			"cache": false
+			"outputs": ["node_modules/@prisma/client/**"]
 		},
 		"preview": {
 			"cache": false,
