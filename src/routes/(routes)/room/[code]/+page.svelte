@@ -11,10 +11,9 @@
 	const form = superForm(data.create)
 
 	$: isGameMaster = data.Viewer.role === Role.GAME_MASTER
-	$: isSetup = data.LayoutViewer.room.state === State.SETUP
-	$: isRunning = data.LayoutViewer.room.state === State.RUNNING
 	$: isDone = data.LayoutViewer.room.state === State.DONE
-	$: isLocked = data.LayoutViewer.room.state === State.LOCKED
+	$: isRunning = data.LayoutViewer.room.state === State.RUNNING || isDone
+	$: isLocked = data.LayoutViewer.room.state === State.LOCKED || isRunning
 </script>
 
 <svelte:head>
@@ -56,7 +55,7 @@
 </ul>
 
 <div class="grid gap-2">
-	{#if isSetup || (isLocked && isGameMaster)}
+	{#if !isLocked || (!isRunning && isGameMaster)}
 		<form use:enhance method="post" action="?/create_tile" class="join flex">
 			<TextInput {form} field="content" class="input-primary input join-item flex-1" />
 			<button type="submit" class="btn-primary join-item btn cursor-default">Create</button>
@@ -64,21 +63,21 @@
 		</form>
 	{/if}
 
-	{#if isRunning || isDone}
+	{#if isRunning }
 		<a href="/" class="btn-primary btn w-full">Board</a>
 		<a href="/" class="btn-primary btn w-full">Leaderboard</a>
 	{/if}
 
-	{#if (isSetup || isLocked) && isGameMaster}
+	{#if ( !isRunning) && isGameMaster}
 		<div class="divider">Game master</div>
 		<form use:enhance method="post">
 			<fieldset class="grid gap-2">
 				<legend class="sr-only">Game master</legend>
-				{#if isSetup}
+				{#if !isLocked}
 					<button type="submit" formaction="?/lock_room" class="btn-accent btn cursor-default">
 						Lock
 					</button>
-				{:else if isLocked}
+				{:else if !isRunning}
 					<button type="submit" class="btn-primary btn cursor-default" formaction="?/start_bingo">
 						Start
 					</button>
