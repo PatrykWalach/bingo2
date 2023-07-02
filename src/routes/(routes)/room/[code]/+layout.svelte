@@ -71,9 +71,10 @@
 											</div>
 										</div>
 									</div>
+
 									<ol
 										tabindex="-1"
-										class="dropdown-content menu rounded-box z-[1] grid aspect-square w-52 grid-cols-5 grid-rows-5 items-stretch justify-items-stretch gap-1 bg-base-200 p-2 shadow"
+										class="{isRunning ? 'grid':'hidden'} dropdown-content menu rounded-box z-[1] aspect-square w-52 grid-cols-5 grid-rows-5 items-stretch justify-items-stretch gap-1 bg-base-200 p-2 shadow"
 									>
 										{#each player.board as tile (tile.id)}
 											<li
