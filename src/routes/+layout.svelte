@@ -49,7 +49,7 @@
 
 		<label
 			for="drawer-input"
-			class="btn-primary drawer-button btn cursor-default fixed bottom-4 right-4 lg:hidden"
+			class="btn-primary drawer-button btn fixed bottom-4 right-4 cursor-default lg:hidden"
 		>
 			Open drawer
 		</label>

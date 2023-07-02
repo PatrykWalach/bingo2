@@ -36,9 +36,9 @@
 				<ul class="flex flex-col gap-1 py-4">
 					{#each players as player (player.user.id)}
 						<li class="">
-							<div class="dropdown-hover w-full dropdown">
+							<div class="dropdown-hover dropdown w-full">
 								<label tabindex="-1" class="w-full" for="">
-									<div class="flex gap-1 w-full">
+									<div class="flex w-full gap-1">
 										<div class="avatar m-2">
 											<div
 												class="w-12 rounded-full ring ring-[--color] ring-offset-2 ring-offset-base-100"
@@ -47,7 +47,7 @@
 												<img src={player.avatar} alt="" />
 											</div>
 										</div>
-										
+
 										<div class="flex-1">
 											<div class="flex items-center gap-1">
 												<span class="text-lg">
@@ -60,7 +60,7 @@
 											<div class="flex justify-between gap-1">
 												<span class="text-md">
 													{#if player.role === Role.GAME_MASTER}
-													Game Master
+														Game Master
 													{/if}
 												</span>
 												<span class="text-xs">
@@ -73,13 +73,13 @@
 									</div>
 									<ol
 										tabindex="-1"
-										class="aspect-square dropdown-content menu rounded-box z-[1] w-52 bg-base-200 p-2 shadow grid grid-cols-5 grid-rows-5 justify-items-stretch items-stretch gap-1"
+										class="dropdown-content menu rounded-box z-[1] grid aspect-square w-52 grid-cols-5 grid-rows-5 items-stretch justify-items-stretch gap-1 bg-base-200 p-2 shadow"
 									>
-									{#each player.board as tile (tile.id)}
-									<li class="m-0 rounded-sm h-auto {tile.tile.isComplete ?'bg-primary':''}">
-										
-									</li>
-									{/each}
+										{#each player.board as tile (tile.id)}
+											<li
+												class="m-0 h-auto rounded-sm {tile.tile.isComplete ? 'bg-primary' : ''}"
+											/>
+										{/each}
 									</ol>
 								</label>
 							</div>
