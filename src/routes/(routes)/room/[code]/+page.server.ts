@@ -251,7 +251,6 @@ export const actions: Actions = {
 
 		invalidateRoom(event, getSocketId(form))
 
-
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	lock_room: async (event) => {
