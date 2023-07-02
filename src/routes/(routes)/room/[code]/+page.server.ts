@@ -17,7 +17,7 @@ export const load: ServerLoad = (event) => {
 			where: {
 				roomCode: String(event.params.code)
 			},
-			orderBy: { createdAt: 'desc' },
+			orderBy: { createdAt: 'asc' },
 			select: {
 				content: true,
 				id: true,
@@ -132,7 +132,7 @@ export const actions: Actions = {
 					author: {
 						room: {
 							state: {
-								not: State.DONE
+								in: [State.SETUP, State.LOCKED]
 							}
 						}
 					},
@@ -295,6 +295,10 @@ export const actions: Actions = {
 				const tiles = await transaction.tile.findMany({
 					where: { roomCode: event.params.code }
 				})
+
+				if (tiles.length < 25) {
+					throw error(400, 'At least 25 tiles are required!')
+				}
 
 				await Promise.all(
 					players.map((player) =>

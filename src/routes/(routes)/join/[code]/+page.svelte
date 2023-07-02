@@ -33,11 +33,11 @@
 						<fieldset class="form-control">
 							<legend class="label"><span class="label-text">Avatar</span></legend>
 
-							<ul class="flex flex-wrap gap-2">
+							<ul class="flex flex-wrap gap-1">
 								{#each data.avatars as avatar}
 									<li>
 										<label class="btn-active btn-circle btn" data-testid="avatar-label">
-											<div class="avatar">
+											<div class="avatar m-2">
 												<input
 													type="radio"
 													name="avatar"

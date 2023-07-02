@@ -3,7 +3,7 @@ import type { ServerLoad } from '@sveltejs/kit'
 
 export const load: ServerLoad = (event) => {
 	return {
-		Viewer: event.locals.db.player.findUniqueOrThrow({
+		BoardQuery: event.locals.db.player.findUniqueOrThrow({
 			where: {
 				roomCode_userSecret: {
 					roomCode: String(event.params.code),
@@ -13,13 +13,11 @@ export const load: ServerLoad = (event) => {
 
 			select: {
 				board: {
+					orderBy: { id: 'asc' },
 					select: {
 						id: true,
 						tile: {
-							select: {
-								content: true,
-								isComplete: true
-							}
+							select: { content: true, isComplete: true }
 						}
 					}
 				}

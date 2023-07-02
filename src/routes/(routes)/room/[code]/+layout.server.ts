@@ -13,6 +13,7 @@ export const load: ServerLoad = (event) => {
 					}
 				},
 				select: {
+					user: { select: { id: true } },
 					room: {
 						select: {
 							code: true,
@@ -22,7 +23,17 @@ export const load: ServerLoad = (event) => {
 								select: {
 									color: true,
 									avatar: true,
+									role: true,
 									name: true,
+									board: {
+										orderBy: { id: 'asc' },
+										select: {
+											id: true,
+											tile: {
+												select: { isComplete: true }
+											}
+										}
+									},
 									_count: {
 										select: {
 											board: {

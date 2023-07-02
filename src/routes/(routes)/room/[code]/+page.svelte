@@ -32,42 +32,49 @@
 					<div class="card-title">
 						{tile.content}
 					</div>
-					{#if isGameMaster || data.Viewer.user.id === tile.author.user.id}
-						<div class="card-actions">
-							{#if isGameMaster && !isDone}
-								<form action="?/toggle_tile" method="post" use:enhance>
-									<button class="btn-primary btn-xs btn cursor-default" type="submit">
-										{!tile.isComplete ? '' : 'in'}complete
-									</button>
-									<input type="hidden" value={$socketId} name="socketId" />
-									<input type="hidden" value={!tile.isComplete} name="isComplete" />
-									<input type="hidden" value={tile.id} name="id" />
-								</form>
-							{/if}
 
+					<div class="card-actions">
+						{#if isGameMaster && !isDone}
+							<form action="?/toggle_tile" method="post" use:enhance>
+								<button class="btn-primary btn-xs btn cursor-default" type="submit">
+									{!tile.isComplete ? '' : 'in'}complete
+								</button>
+								<input type="hidden" value={$socketId} name="socketId" />
+								<input type="hidden" value={!tile.isComplete} name="isComplete" />
+								<input type="hidden" value={tile.id} name="id" />
+							</form>
+						{/if}
+
+						{#if (isGameMaster || data.Viewer.user.id === tile.author.user.id) && !isRunning}
 							<label for="delete-tile-{tile.id}" class="btn-error btn-xs btn">delete</label>
-						</div>
-					{/if}
+						{/if}
+					</div>
 				</div>
 			</div>
 		</li>
 	{:else}
-		<li>No tiles yet, create some</li>
+		<li class="text-error">No tiles yet, create some</li>
 	{/each}
 </ul>
 
 <div class="grid gap-2">
+	{#if data.Tiles.length}
+		<div
+			class="text-center text-xs {data.Tiles.length < 13
+				? 'text-error'
+				: data.Tiles.length < 25
+				? 'text-warning'
+				: 'text-info'}"
+		>
+			{data.Tiles.length} tiles
+		</div>
+	{/if}
 	{#if !isLocked || (!isRunning && isGameMaster)}
 		<form use:enhance method="post" action="?/create_tile" class="join flex">
 			<TextInput {form} field="content" class="input-primary input join-item flex-1" />
-			<button type="submit" class="btn-primary join-item btn cursor-default">Create</button>
 			<input type="hidden" value={$socketId} name="socketId" />
+			<button type="submit" class="btn-primary join-item btn cursor-default">Create</button>
 		</form>
-	{/if}
-
-	{#if isRunning}
-		<a href="/" class="btn-primary btn w-full">Board</a>
-		<a href="/" class="btn-primary btn w-full">Leaderboard</a>
 	{/if}
 
 	{#if !isRunning && isGameMaster}
@@ -80,8 +87,13 @@
 						Lock
 					</button>
 				{:else if !isRunning}
-					<button type="submit" class="btn-primary btn cursor-default" formaction="?/start_bingo">
-						Start
+					<button
+						type="submit"
+						class="btn-primary btn cursor-default"
+						disabled={data.Tiles.length < 25}
+						formaction="?/start_bingo"
+					>
+						{data.Tiles.length < 25 ? '25 tiles required' : 'Start'}
 					</button>
 					<button type="submit" class="btn-accent btn cursor-default" formaction="?/unlock_bingo">
 						Unlock
