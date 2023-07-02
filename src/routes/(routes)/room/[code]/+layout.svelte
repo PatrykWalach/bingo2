@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	import { State } from '$lib/constants'
-	import { Role } from '@prisma/client'
+	import { Role, State } from '$lib/constants'
+
 	import type { PageData } from './$types'
 	export let data: PageData
 
