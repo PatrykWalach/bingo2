@@ -8,8 +8,10 @@ export const pusher = new Pusher(PUBLIC_PUSHER_KEY, {
 
 const _socketId = writable<string | undefined>()
 
-pusher.connection.bind('connected', () => {
-	_socketId.set(pusher.connection.socket_id)
-})
+if (window !== undefined) {
+	pusher.connection.bind('connected', () => {
+		_socketId.set(pusher.connection.socket_id)
+	})
+}
 
 export const socketId: Readable<string | undefined> = _socketId
