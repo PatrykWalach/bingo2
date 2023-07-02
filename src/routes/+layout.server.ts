@@ -12,7 +12,7 @@ export const load: ServerLoad = (event) => {
 			where: {
 				players: {
 					some: {
-						userSecret: event.cookies.get(TOKEN)
+						userSecret: String(event.cookies.get(TOKEN))
 					}
 				}
 			}
