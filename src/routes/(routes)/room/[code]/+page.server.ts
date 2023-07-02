@@ -177,40 +177,71 @@ export const actions: Actions = {
 		const secret = getSecretOrThrow(event)
 
 		try {
-			await event.locals.db.tile.update({
-				data: {
-					isComplete: {
-						set: 'true' === form.get('isComplete')
-					}
-				},
-				where: {
-					id,
-					author: {
-						room: {
-							state: {
-								not: State.DONE
-							}
-						}
+			await event.locals.db.$transaction(async (transaction) => {
+				const { isComplete, roomCode } = await transaction.tile.update({
+					data: {
+						isComplete: 'true' === form.get('isComplete')
 					},
-					OR: [
-						{
-							author: {
-								room: {
-									players: {
-										some: {
-											role: Role.GAME_MASTER,
-											userSecret: secret
+					where: {
+						id,
+						author: {
+							room: {
+								state: {
+									not: State.DONE
+								}
+							}
+						},
+						OR: [
+							{
+								author: {
+									room: {
+										players: {
+											some: {
+												role: Role.GAME_MASTER,
+												userSecret: secret
+											}
+										}
+									}
+								}
+							},
+							{
+								author: {
+									userSecret: secret
+								}
+							}
+						]
+					}
+				})
+
+				if (!isComplete) {
+					return
+				}
+
+				try {
+					await transaction.bingo.update({
+						data: { state: State.DONE },
+						where: {
+							state: State.RUNNING,
+							code: roomCode,
+							players: {
+								some: {
+									board: {
+										every: {
+											tile: {
+												isComplete: true
+											}
 										}
 									}
 								}
 							}
-						},
-						{
-							author: {
-								userSecret: secret
-							}
 						}
-					]
+					})
+				} catch (e) {
+					if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+						return
+					}
+					console.error(e)
+					throw e
 				}
 			})
 		} catch (e) {
@@ -219,6 +250,7 @@ export const actions: Actions = {
 		}
 
 		invalidateRoom(event, getSocketId(form))
+
 
 		throw redirect(303, `/room/${event.params.code}`)
 	},
