@@ -7,10 +7,10 @@
 		<div class="card-body items-center">
 			<h1 class="card-title inline font-black text-9xl">{$page.status}</h1>
 			<p>{$page.error?.message}</p>
-      <div class="card-actions">
-        <a href="/" class="btn lg:btn-lg btn-neutral">go home</a>
-        <a href="/" class="btn lg:btn-lg btn-ghost">contact us</a>
-      </div>
+			<div class="card-actions">
+				<a href="/" class="btn-neutral btn lg:btn-lg">go home</a>
+				<a href="/" class="btn-ghost btn lg:btn-lg">contact us</a>
+			</div>
 		</div>
 	</div>
 </main>
