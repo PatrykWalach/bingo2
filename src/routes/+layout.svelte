@@ -4,13 +4,14 @@
 	import { invalidateAll } from '$app/navigation'
 
 	import { page } from '$app/stores'
-	import { pusher } from '$lib/socket'
 	import { onDestroy, onMount } from 'svelte'
 	import { derived } from 'svelte/store'
 
 	let unsubscriber = (): void => undefined
 
-	onMount(() => {
+	onMount(async () => {
+		const { pusher } = await import('$lib/socket.client')
+
 		let clean = (): void => undefined
 
 		unsubscriber = derived(page, ($page) => $page.url.pathname).subscribe(

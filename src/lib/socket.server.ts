@@ -34,7 +34,7 @@ class Pusher {
 	async trigger(
 		channel: string | string[],
 		name: string,
-		data: {},
+		data: Record<string, unknown>,
 		options?: { socket_id?: string }
 	) {
 		const body = JSON.stringify({
