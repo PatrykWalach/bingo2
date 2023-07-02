@@ -38,7 +38,8 @@
 		"migrate": { "inputs": ["prisma/schema.prisma"] },
 		"generate": {
 			"inputs": ["prisma/schema.prisma"],
-			"outputs": ["node_modules/@prisma/client/**"]
+			"outputs": ["node_modules/@prisma/client/**"],
+			"env": ["PRISMA_GENERATE_DATAPROXY"]
 		},
 		"preview": {
 			"cache": false,

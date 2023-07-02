@@ -17,6 +17,7 @@ export const load: ServerLoad = (event) => {
 			where: {
 				roomCode: String(event.params.code)
 			},
+			orderBy: { createdAt: 'asc' },
 			select: {
 				content: true,
 				id: true,
@@ -34,38 +35,42 @@ export const load: ServerLoad = (event) => {
 				}
 			}
 		}),
-		Viewer: event.locals.db.player.findUniqueOrThrow({
-			where: {
-				roomCode_userSecret: {
-					roomCode: String(event.params.code),
-					userSecret: String(event.cookies.get(TOKEN))
-				}
-			},
+		Viewer: event.locals.db.player
+			.findUniqueOrThrow({
+				where: {
+					roomCode_userSecret: {
+						roomCode: String(event.params.code),
+						userSecret: String(event.cookies.get(TOKEN))
+					}
+				},
 
-			select: {
-				role: true,
-				user: { select: { id: true } },
-				room: {
-					select: {
-						code: true,
-						name: true,
-						state: true,
-						players: {
-							select: {
-								color: true,
-								avatar: true,
-								name: true,
-								user: {
-									select: {
-										id: true
+				select: {
+					role: true,
+					user: { select: { id: true } },
+					room: {
+						select: {
+							players: {
+								select: {
+									color: true,
+									avatar: true,
+									name: true,
+									user: {
+										select: {
+											id: true
+										}
 									}
 								}
 							}
 						}
 					}
 				}
-			}
-		})
+			})
+			.catch((e) => {
+				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+					throw error(404, 'Sounds like skill issue!')
+				}
+				throw e
+			})
 	}
 }
 
@@ -124,6 +129,13 @@ export const actions: Actions = {
 			await event.locals.db.tile.delete({
 				where: {
 					id,
+					author: {
+						room: {
+							state: {
+								in: [State.SETUP, State.LOCKED]
+							}
+						}
+					},
 					OR: [
 						{
 							author: {
@@ -143,6 +155,93 @@ export const actions: Actions = {
 							}
 						}
 					]
+				}
+			})
+		} catch (e) {
+			console.error(e)
+			throw e
+		}
+
+		invalidateRoom(event, getSocketId(form))
+
+		throw redirect(303, `/room/${event.params.code}`)
+	},
+	toggle_tile: async (event) => {
+		const form = await event.request.formData()
+		const id = form.get('id')
+
+		if (typeof id !== 'string') {
+			throw error(400, 'No `id`!')
+		}
+
+		const secret = getSecretOrThrow(event)
+
+		try {
+			await event.locals.db.$transaction(async (transaction) => {
+				const { isComplete, roomCode } = await transaction.tile.update({
+					data: {
+						isComplete: 'true' === form.get('isComplete')
+					},
+					where: {
+						id,
+						author: {
+							room: {
+								state: {
+									not: State.DONE
+								}
+							}
+						},
+						OR: [
+							{
+								author: {
+									room: {
+										players: {
+											some: {
+												role: Role.GAME_MASTER,
+												userSecret: secret
+											}
+										}
+									}
+								}
+							},
+							{
+								author: {
+									userSecret: secret
+								}
+							}
+						]
+					}
+				})
+
+				if (!isComplete) {
+					return
+				}
+
+				try {
+					await transaction.bingo.update({
+						data: { state: State.DONE },
+						where: {
+							state: State.RUNNING,
+							code: roomCode,
+							players: {
+								some: {
+									board: {
+										every: {
+											tile: {
+												isComplete: true
+											}
+										}
+									}
+								}
+							}
+						}
+					})
+				} catch (e) {
+					if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+						return
+					}
+					console.error(e)
+					throw e
 				}
 			})
 		} catch (e) {
@@ -227,6 +326,10 @@ export const actions: Actions = {
 				const tiles = await transaction.tile.findMany({
 					where: { roomCode: event.params.code }
 				})
+
+				if (tiles.length < 25) {
+					throw error(400, 'At least 25 tiles are required!')
+				}
 
 				await Promise.all(
 					players.map((player) =>

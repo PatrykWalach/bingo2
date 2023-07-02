@@ -67,6 +67,7 @@ model Tile {
   author     Player      @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
   roomCode   String
   userSecret String
+  createdAt DateTime @default(now())
 }
 
 model Bingo {
