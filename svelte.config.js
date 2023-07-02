@@ -9,8 +9,7 @@ const config = {
 
 	kit: {
 		adapter: adapter({
-			runtime: 'edge',
-			external: ['crypto', 'url']
+			runtime: 'edge'
 		})
 	}
 }
