@@ -39,7 +39,8 @@
 		"generate": {
 			"inputs": ["prisma/schema.prisma"],
 			"outputs": ["node_modules/@prisma/client/**"],
-			"env": ["PRISMA_GENERATE_DATAPROXY"]
+			"env": ["PRISMA_GENERATE_DATAPROXY"],
+			"cache": false
 		},
 		"preview": {
 			"cache": false,
