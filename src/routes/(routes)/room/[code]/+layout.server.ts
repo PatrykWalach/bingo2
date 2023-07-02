@@ -3,9 +3,9 @@ import { Prisma } from '@prisma/client'
 import { error, type ServerLoad } from '@sveltejs/kit'
 
 export const load: ServerLoad = (event) => {
-	try {
-		return {
-			LayoutViewer: event.locals.db.player.findUniqueOrThrow({
+	return {
+		LayoutViewer: event.locals.db.player
+			.findUniqueOrThrow({
 				where: {
 					roomCode_userSecret: {
 						roomCode: String(event.params.code),
@@ -45,11 +45,11 @@ export const load: ServerLoad = (event) => {
 					}
 				}
 			})
-		}
-	} catch (e) {
-		if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-			throw error(404, 'Not found!')
-		}
-		throw e
+			.catch((e) => {
+				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+					throw error(404, 'Sounds like skill issue!')
+				}
+				throw e
+			})
 	}
 }

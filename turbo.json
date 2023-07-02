@@ -11,6 +11,7 @@
 				"svelte.config.js",
 				"postcss.config.cjs"
 			],
+			"env": ["VERCEL"],
 			"dependsOn": ["generate", "migrate"]
 		},
 		"lint": {},

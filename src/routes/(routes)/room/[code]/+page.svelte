@@ -34,12 +34,14 @@
 					</div>
 					{#if isGameMaster || data.Viewer.user.id === tile.author.user.id}
 						<div class="card-actions">
-							{#if isGameMaster && isDone}
-								<form action="?/toggle_tile" use:enhance>
+							{#if isGameMaster && !isDone}
+								<form action="?/toggle_tile" method="post" use:enhance>
 									<button class="btn-primary btn-xs btn cursor-default" type="submit">
-										complete
+										{!tile.isComplete ? '' : 'in'}complete
 									</button>
 									<input type="hidden" value={$socketId} name="socketId" />
+									<input type="hidden" value={!tile.isComplete} name="isComplete" />
+									<input type="hidden" value={tile.id} name="id" />
 								</form>
 							{/if}
 

@@ -11,31 +11,32 @@ const create = z.object({
 })
 
 export const load: ServerLoad = (event) => {
-	try {
-		return {
-			create: superValidate(create),
-			Tiles: event.locals.db.tile.findMany({
-				where: {
-					roomCode: String(event.params.code)
-				},
-				select: {
-					content: true,
-					id: true,
-					isComplete: true,
-					author: {
-						select: {
-							avatar: true,
-							name: true,
-							user: {
-								select: {
-									id: true
-								}
+	return {
+		create: superValidate(create),
+		Tiles: event.locals.db.tile.findMany({
+			where: {
+				roomCode: String(event.params.code)
+			},
+			orderBy: { createdAt: 'desc' },
+			select: {
+				content: true,
+				id: true,
+				isComplete: true,
+				author: {
+					select: {
+						avatar: true,
+						name: true,
+						user: {
+							select: {
+								id: true
 							}
 						}
 					}
 				}
-			}),
-			Viewer: event.locals.db.player.findUniqueOrThrow({
+			}
+		}),
+		Viewer: event.locals.db.player
+			.findUniqueOrThrow({
 				where: {
 					roomCode_userSecret: {
 						roomCode: String(event.params.code),
@@ -64,12 +65,12 @@ export const load: ServerLoad = (event) => {
 					}
 				}
 			})
-		}
-	} catch (e) {
-		if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-			throw error(404, 'Not found!')
-		}
-		throw e
+			.catch((e) => {
+				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+					throw error(404, 'Sounds like skill issue!')
+				}
+				throw e
+			})
 	}
 }
 
@@ -128,6 +129,69 @@ export const actions: Actions = {
 			await event.locals.db.tile.delete({
 				where: {
 					id,
+					author: {
+						room: {
+							state: {
+								not: State.DONE
+							}
+						}
+					},
+					OR: [
+						{
+							author: {
+								room: {
+									players: {
+										some: {
+											role: Role.GAME_MASTER,
+											userSecret: secret
+										}
+									}
+								}
+							}
+						},
+						{
+							author: {
+								userSecret: secret
+							}
+						}
+					]
+				}
+			})
+		} catch (e) {
+			console.error(e)
+			throw e
+		}
+
+		invalidateRoom(event, getSocketId(form))
+
+		throw redirect(303, `/room/${event.params.code}`)
+	},
+	toggle_tile: async (event) => {
+		const form = await event.request.formData()
+		const id = form.get('id')
+
+		if (typeof id !== 'string') {
+			throw error(400, 'No `id`!')
+		}
+
+		const secret = getSecretOrThrow(event)
+
+		try {
+			await event.locals.db.tile.update({
+				data: {
+					isComplete: {
+						set: 'true' === form.get('isComplete')
+					}
+				},
+				where: {
+					id,
+					author: {
+						room: {
+							state: {
+								not: State.DONE
+							}
+						}
+					},
 					OR: [
 						{
 							author: {
