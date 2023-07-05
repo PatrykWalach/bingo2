@@ -33,7 +33,7 @@
 		"dev": {
 			"cache": false,
 			"persistent": true,
-			"dependsOn": [ "migrate"]
+			"dependsOn": ["migrate"]
 		},
 		"migrate": { "inputs": ["prisma/schema.prisma"], "cache": false },
 		"generate": {

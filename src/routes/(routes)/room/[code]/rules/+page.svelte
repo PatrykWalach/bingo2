@@ -6,8 +6,8 @@
 	export let data: import('./$types').PageData
 
 	const form = superForm(data.save, {
-    taintedMessage:null
-  })
+		taintedMessage: null
+	})
 </script>
 
 <main>
