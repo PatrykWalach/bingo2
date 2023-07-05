@@ -19,7 +19,7 @@
 
 <div class="form-control">
 	<label class="label cursor-pointer">
-		<span class="label-text"><slot/></span>
+		<span class="label-text"><slot /></span>
 		<input
 			id={inputId}
 			name={field}

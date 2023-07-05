@@ -117,15 +117,16 @@
 						>
 							Board
 						</a>
-					</div>					<a
-					data-sveltekit-replacestate
-					href="/room/{$page.params.code}/rules"
-					class="tab {$page.url.pathname === `/room/${$page.params.code}/rules`
-						? 'tab-active'
-						: ''}"
-				>
-					Rules
-				</a>
+					</div>
+					<a
+						data-sveltekit-replacestate
+						href="/room/{$page.params.code}/rules"
+						class="tab {$page.url.pathname === `/room/${$page.params.code}/rules`
+							? 'tab-active'
+							: ''}"
+					>
+						Rules
+					</a>
 				</nav>
 
 				<slot />

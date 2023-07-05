@@ -12,10 +12,18 @@
 
 <main>
 	<form action="" use:form.enhance method="post" on:change={(e) => e.currentTarget.submit()}>
-		<CheckBox readonly={data.RulesQuery.role !== Role.GAME_MASTER} {form} field="isWithFreeTile" >Free tile</CheckBox>
+		<CheckBox readonly={data.RulesQuery.role !== Role.GAME_MASTER} {form} field="isWithFreeTile">
+			Free tile
+		</CheckBox>
 
-		<CheckBox readonly={data.RulesQuery.role !== Role.GAME_MASTER} {form} field="isWithHiddenBoards" >Hide boards</CheckBox>
-    
+		<CheckBox
+			readonly={data.RulesQuery.role !== Role.GAME_MASTER}
+			{form}
+			field="isWithHiddenBoards"
+		>
+			Hide boards
+		</CheckBox>
+
 		<noscript>
 			<div class="form-control mt-6">
 				<button type="submit" class="btn-primary btn">save</button>
