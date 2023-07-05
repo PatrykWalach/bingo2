@@ -18,7 +18,7 @@
 				"svelte.config.js",
 				"postcss.config.cjs"
 			],
-			"dependsOn": [ "migrate"]
+			"dependsOn": ["migrate"]
 		},
 		"lint": {},
 		"test": {
@@ -33,7 +33,7 @@
 		"dev": {
 			"cache": false,
 			"persistent": true,
-			"dependsOn": ["generate"]
+			"dependsOn": [ "migrate"]
 		},
 		"migrate": { "inputs": ["prisma/schema.prisma"], "cache": false },
 		"generate": {

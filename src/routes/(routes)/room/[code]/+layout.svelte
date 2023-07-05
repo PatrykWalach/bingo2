@@ -90,14 +90,21 @@
 					{/each}
 				</ul>
 			</section>
-			<section class="grid gap-2 xl:col-span-2">
-				<nav class="tabs tabs-boxed grid grid-cols-2">
+			<section class="flex flex-col gap-2 xl:col-span-2">
+				<nav class="tabs tabs-boxed grid grid-cols-3">
 					<a
 						data-sveltekit-replacestate
 						href="/room/{$page.params.code}"
 						class="tab {$page.url.pathname === `/room/${$page.params.code}` ? 'tab-active' : ''}"
 					>
 						Tiles
+					</a>
+					<a
+						data-sveltekit-replacestate
+						href="/room/{$page.params.code}/rules"
+						class="tab {$page.url.pathname === `/room/${$page.params.code}/rules` ? 'tab-active' : ''}"
+					>
+						Rules
 					</a>
 					<a
 						href={isRunning ? `/room/${$page.params.code}/board` : undefined}

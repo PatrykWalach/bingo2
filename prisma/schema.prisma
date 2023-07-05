@@ -58,6 +58,7 @@ model Bingo {
   name    String
   state   State    @default(SETUP)
   players Player[]
+  isWithFreeTile Boolean @default(false)
 
   @@map("Room")
 }
