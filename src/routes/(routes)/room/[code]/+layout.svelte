@@ -99,26 +99,33 @@
 					>
 						Tiles
 					</a>
-					<a
-						data-sveltekit-replacestate
-						href="/room/{$page.params.code}/rules"
-						class="tab {$page.url.pathname === `/room/${$page.params.code}/rules`
-							? 'tab-active'
-							: ''}"
+
+					<div
+						class="tooltip tooltip-bottom"
+						data-tip={data.LayoutViewer.room.isWithHiddenBoards ? 'disabled in rules' : undefined}
 					>
-						Rules
-					</a>
-					<a
-						href={isRunning ? `/room/${$page.params.code}/board` : undefined}
-						class="tab {$page.url.pathname.startsWith(`/room/${$page.params.code}/board`)
-							? 'tab-active'
-							: isRunning
-							? ''
-							: 'tab-disabled'}"
-						data-sveltekit-replacestate
-					>
-						Board
-					</a>
+						<a
+							href={isRunning && !data.LayoutViewer.room.isWithHiddenBoards
+								? `/room/${$page.params.code}/board`
+								: undefined}
+							class="tab {$page.url.pathname.startsWith(`/room/${$page.params.code}/board`)
+								? 'tab-active'
+								: isRunning
+								? ''
+								: 'tab-disabled'}"
+							data-sveltekit-replacestate
+						>
+							Board
+						</a>
+					</div>					<a
+					data-sveltekit-replacestate
+					href="/room/{$page.params.code}/rules"
+					class="tab {$page.url.pathname === `/room/${$page.params.code}/rules`
+						? 'tab-active'
+						: ''}"
+				>
+					Rules
+				</a>
 				</nav>
 
 				<slot />

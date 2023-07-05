@@ -5,7 +5,8 @@ import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 
 const save = z.object({
-	isWithFreeTile: z.boolean()
+	isWithFreeTile: z.boolean().optional(),
+	isWithHiddenBoards: z.boolean().optional()
 })
 
 export const load: ServerLoad = async (event) => {
@@ -22,7 +23,8 @@ export const load: ServerLoad = async (event) => {
 				role: true,
 				room: {
 					select: {
-						isWithFreeTile: true
+						isWithFreeTile: true,
+						isWithHiddenBoards: true
 					}
 				}
 			}
@@ -35,8 +37,14 @@ export const load: ServerLoad = async (event) => {
 		})
 
 	return {
-		save: superValidate({ isWithFreeTile: player.room.isWithFreeTile }, save),
-		RulesQuery: player
+		save: superValidate(
+			{
+				isWithFreeTile: player.room.isWithFreeTile,
+				isWithHiddenBoards: player.room.isWithHiddenBoards
+			},
+			save
+		),
+		RulesQuery: { role: player.role }
 	}
 }
 
@@ -49,7 +57,10 @@ export const actions = {
 		}
 
 		await event.locals.db.bingo.update({
-			data: { isWithFreeTile: form.data.isWithFreeTile },
+			data: {
+				isWithFreeTile: form.data.isWithFreeTile,
+				isWithHiddenBoards: form.data.isWithHiddenBoards
+			},
 			where: {
 				state: { in: [State.SETUP, State.LOCKED] },
 				code: event.params.code,

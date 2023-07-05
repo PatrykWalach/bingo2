@@ -16,6 +16,7 @@ export const load: ServerLoad = (event) => {
 					user: { select: { id: true } },
 					room: {
 						select: {
+							isWithHiddenBoards: true,
 							code: true,
 							name: true,
 							state: true,
