@@ -68,10 +68,11 @@ ALTER TABLE "Player" ADD CONSTRAINT "Player_roomCode_fkey" FOREIGN KEY ("roomCod
 ALTER TABLE "Player" ADD CONSTRAINT "Player_userSecret_fkey" FOREIGN KEY ("userSecret") REFERENCES "User"("secret") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BoardTile" ADD CONSTRAINT "BoardTile_tileId_fkey" FOREIGN KEY ("tileId") REFERENCES "Tile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "BoardTile" ADD CONSTRAINT "BoardTile_playerRoomCode_playerUserSecret_fkey" FOREIGN KEY ("playerRoomCode", "playerUserSecret") REFERENCES "Player"("roomCode", "userSecret") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "BoardTile" ADD CONSTRAINT "BoardTile_tileId_fkey" FOREIGN KEY ("tileId") REFERENCES "Tile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Tile" ADD CONSTRAINT "Tile_roomCode_userSecret_fkey" FOREIGN KEY ("roomCode", "userSecret") REFERENCES "Player"("roomCode", "userSecret") ON DELETE RESTRICT ON UPDATE CASCADE;
+

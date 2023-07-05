@@ -308,20 +308,21 @@ export const actions: Actions = {
 
 		try {
 			await event.locals.db.$transaction(async (transaction) => {
-				const players = await transaction.bingo
-					.update({
-						data: {
-							state: State.RUNNING
-						},
-						where: {
-							state: State.LOCKED,
-							code: event.params.code,
-							players: {
-								some: { role: Role.GAME_MASTER, userSecret: secret }
-							}
+				const bingo = await transaction.bingo.update({
+					data: {
+						state: State.RUNNING
+					},
+					where: {
+						state: State.LOCKED,
+						code: event.params.code,
+						players: {
+							some: { role: Role.GAME_MASTER, userSecret: secret }
 						}
-					})
-					.players()
+					},
+					include: {
+						players: true
+					}
+				})
 
 				const tiles = await transaction.tile.findMany({
 					where: { roomCode: event.params.code }
@@ -331,9 +332,47 @@ export const actions: Actions = {
 					throw error(400, 'At least 25 tiles are required!')
 				}
 
+				const freeTileId = crypto.randomUUID()
+
 				await Promise.all(
-					players.map((player) =>
-						transaction.player.update({
+					bingo.players.map((player) => {
+						const create: Prisma.BoardTileCreateWithoutPlayerInput[] = getRandomElements(
+							tiles,
+							25
+						).map(({ id }) =>
+							Prisma.validator<Prisma.BoardTileCreateWithoutPlayerInput>()({
+								tile: {
+									connect: { id }
+								}
+							})
+						)
+
+						if (bingo.isWithFreeTile) {
+							create.splice(12, 1, {
+								tile: {
+									connectOrCreate: {
+										create: {
+											id: freeTileId,
+											content: 'Free',
+											isComplete: true,
+											author: {
+												connect: {
+													roomCode_userSecret: {
+														roomCode: event.params.code,
+														userSecret: secret
+													}
+												}
+											}
+										},
+										where: {
+											id: freeTileId
+										}
+									}
+								}
+							})
+						}
+
+						return transaction.player.update({
 							where: {
 								roomCode_userSecret: {
 									roomCode: player.roomCode,
@@ -342,15 +381,11 @@ export const actions: Actions = {
 							},
 							data: {
 								board: {
-									create: getRandomElements(tiles, 25).map(({ id }) => ({
-										tile: {
-											connect: { id }
-										}
-									}))
+									create: create
 								}
 							}
 						})
-					)
+					})
 				)
 			})
 		} catch (e) {
