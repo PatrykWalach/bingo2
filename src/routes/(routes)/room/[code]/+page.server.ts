@@ -371,9 +371,9 @@ export const actions: Actions = {
 					throw error(400, 'At least 25 tiles are required!')
 				}
 
-				let rows: Prisma.RowCreateManyInput[] = []
-				let boardTileToRows: Prisma.BoardTileToRowCreateManyInput[] = []
-				let boardTiles = bingo.players.flatMap((player) => {
+				const rows: Prisma.RowCreateManyInput[] = []
+				const boardTileToRows: Prisma.BoardTileToRowCreateManyInput[] = []
+				const boardTiles = bingo.players.flatMap((player) => {
 					const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
 					const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
 					const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
