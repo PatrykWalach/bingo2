@@ -20,7 +20,6 @@ model User {
   secret String @unique
 }
 
-
 enum Role {
   GAME_MASTER
   PLAYER
@@ -48,15 +47,26 @@ model Player {
   @@id([roomCode, userSecret])
 }
 
-model BoardTile {
-  tile             Tile   @relation(fields: [tileId], references: [id])
-  id               Int    @id @default(autoincrement())
-  player           Player @relation(fields: [playerRoomCode, playerUserSecret], references: [roomCode, userSecret])
-  tileId           String
-  playerRoomCode   String
-  playerUserSecret String
+model Row {
+  id    String      @id @default(uuid())
+  tiles BoardTile[]
 
-  @@unique([playerRoomCode, playerUserSecret, tileId]) // no duplicate tiles for user
+  @@map("BoardRow")
+}
+
+model BoardTile {
+  tile       Tile   @relation(fields: [tileId], references: [id])
+  id         String @id @default(uuid())
+  player     Player @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
+  tileId     String
+  roomCode   String @map("playerRoomCode")
+  userSecret String @map("playerUserSecret")
+
+  rows  Row[]
+  index Int   @default(autoincrement())
+
+  @@unique([roomCode, userSecret, index])
+  @@unique([roomCode, userSecret, tileId]) // no duplicate tiles for user
 }
 
 model Tile {
@@ -67,14 +77,20 @@ model Tile {
   author     Player      @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
   roomCode   String
   userSecret String
-  createdAt DateTime @default(now())
+  createdAt  DateTime    @default(now())
+}
+
+enum WinCondition {
+  FIRST_ROW
+  ALL_ROWS
 }
 
 model Bingo {
-  code    String   @id
-  name    String
-  state   State    @default(SETUP)
-  players Player[]
-  
+  code        String       @id
+  name        String
+  state       State        @default(SETUP)
+  players     Player[]
+  winCodition WinCondition @default(FIRST_ROW)
+
   @@map("Room")
 }

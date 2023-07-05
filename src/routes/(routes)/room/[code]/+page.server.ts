@@ -1,5 +1,5 @@
 import { Role, State, TOKEN } from '$lib/constants'
-import { Prisma } from '@prisma/client'
+import { Prisma, WinCondition } from '@prisma/client'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
@@ -223,6 +223,43 @@ export const actions: Actions = {
 						where: {
 							state: State.RUNNING,
 							code: roomCode,
+							winCodition: WinCondition.FIRST_ROW,
+							players: {
+								some: {
+									board: {
+										some: {
+											rows: {
+												some: {
+													tiles: {
+														every: {
+															tile: {
+																isComplete: true
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					})
+				} catch (e) {
+					if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+						return
+					}
+					console.error(e)
+					throw e
+				}
+
+				try {
+					await transaction.bingo.update({
+						data: { state: State.DONE },
+						where: {
+							state: State.RUNNING,
+							code: roomCode,
+							winCodition: WinCondition.ALL_ROWS,
 							players: {
 								some: {
 									board: {
@@ -332,7 +369,33 @@ export const actions: Actions = {
 				}
 
 				await Promise.all(
-					players.map((player) =>
+					players.map((player) => {
+						const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
+						const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
+						const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
+
+						const boardTiles = getRandomElements(tiles, 25).map(({ id }, i) => {
+							const rows = [horizontal[i / 5], vertical[i % 5]]
+
+							if (i % 5 === i / 5) {
+								rows.push(diagonal[0])
+							}
+
+							if (4 - (i % 5) === i / 5) {
+								rows.push(diagonal[0])
+							}
+
+							return Prisma.validator<Prisma.BoardTileCreateWithoutPlayerInput>()({
+								index: i,
+								tile: {
+									connect: { id }
+								},
+								rows: {
+									connectOrCreate: rows.map((id) => ({ create: {}, where: { id } }))
+								}
+							})
+						})
+
 						transaction.player.update({
 							where: {
 								roomCode_userSecret: {
@@ -342,15 +405,11 @@ export const actions: Actions = {
 							},
 							data: {
 								board: {
-									create: getRandomElements(tiles, 25).map(({ id }) => ({
-										tile: {
-											connect: { id }
-										}
-									}))
+									create: boardTiles
 								}
 							}
 						})
-					)
+					})
 				)
 			})
 		} catch (e) {

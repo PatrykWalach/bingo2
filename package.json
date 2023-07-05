@@ -13,7 +13,7 @@
 		"prettier": "prettier --cache --cache-strategy content",
 		"format": "npm run prettier -- --write .",
 		"generate": "prisma generate",
-		"migrate": "prisma migrate deploy"
+		"migrate": "prisma migrate dev"
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^8.0.2",
