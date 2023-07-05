@@ -345,20 +345,21 @@ export const actions: Actions = {
 
 		try {
 			await event.locals.db.$transaction(async (transaction) => {
-				const players = await transaction.bingo
-					.update({
-						data: {
-							state: State.RUNNING
-						},
-						where: {
-							state: State.LOCKED,
-							code: event.params.code,
-							players: {
-								some: { role: Role.GAME_MASTER, userSecret: secret }
-							}
+				const bingo = await transaction.bingo.update({
+					data: {
+						state: State.RUNNING
+					},
+					where: {
+						state: State.LOCKED,
+						code: event.params.code,
+						players: {
+							some: { role: Role.GAME_MASTER, userSecret: secret }
 						}
-					})
-					.players()
+					},
+					include: {
+						players: true
+					}
+				})
 
 				const tiles = await transaction.tile.findMany({
 					where: { roomCode: event.params.code }
@@ -368,13 +369,18 @@ export const actions: Actions = {
 					throw error(400, 'At least 25 tiles are required!')
 				}
 
+				const freeTileId = crypto.randomUUID()
+
 				await Promise.all(
-					players.map((player) => {
+					bingo.players.map((player) => {
 						const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
 						const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
 						const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
 
-						const boardTiles = getRandomElements(tiles, 25).map(({ id }, i) => {
+						const boardTiles: Prisma.BoardTileCreateWithoutPlayerInput[] = getRandomElements(
+							tiles,
+							25
+						).map(({ id }, i) => {
 							const rows = [horizontal[i / 5], vertical[i % 5]]
 
 							if (i % 5 === i / 5) {
@@ -396,7 +402,29 @@ export const actions: Actions = {
 							})
 						})
 
-						transaction.player.update({
+						if (bingo.isWithFreeTile) {
+							delete boardTiles[12].tile.connect
+							boardTiles[12].tile.connectOrCreate = {
+								create: {
+									id: freeTileId,
+									content: 'Free',
+									isComplete: true,
+									author: {
+										connect: {
+											roomCode_userSecret: {
+												roomCode: event.params.code,
+												userSecret: secret
+											}
+										}
+									}
+								},
+								where: {
+									id: freeTileId
+								}
+							}
+						}
+
+						return transaction.player.update({
 							where: {
 								roomCode_userSecret: {
 									roomCode: player.roomCode,

@@ -90,8 +90,8 @@
 					{/each}
 				</ul>
 			</section>
-			<section class="grid gap-2 xl:col-span-2">
-				<nav class="tabs tabs-boxed grid grid-cols-2">
+			<section class="flex flex-col gap-2 xl:col-span-2">
+				<nav class="tabs tabs-boxed grid grid-cols-3">
 					<a
 						data-sveltekit-replacestate
 						href="/room/{$page.params.code}"
@@ -99,16 +99,33 @@
 					>
 						Tiles
 					</a>
-					<a
-						href={isRunning ? `/room/${$page.params.code}/board` : undefined}
-						class="tab {$page.url.pathname.startsWith(`/room/${$page.params.code}/board`)
-							? 'tab-active'
-							: isRunning
-							? ''
-							: 'tab-disabled'}"
-						data-sveltekit-replacestate
+
+					<div
+						class="tooltip tooltip-bottom"
+						data-tip={data.LayoutViewer.room.isWithHiddenBoards ? 'disabled in rules' : undefined}
 					>
-						Board
+						<a
+							href={isRunning && !data.LayoutViewer.room.isWithHiddenBoards
+								? `/room/${$page.params.code}/board`
+								: undefined}
+							class="tab {$page.url.pathname.startsWith(`/room/${$page.params.code}/board`)
+								? 'tab-active'
+								: isRunning
+								? ''
+								: 'tab-disabled'}"
+							data-sveltekit-replacestate
+						>
+							Board
+						</a>
+					</div>
+					<a
+						data-sveltekit-replacestate
+						href="/room/{$page.params.code}/rules"
+						class="tab {$page.url.pathname === `/room/${$page.params.code}/rules`
+							? 'tab-active'
+							: ''}"
+					>
+						Rules
 					</a>
 				</nav>
 
