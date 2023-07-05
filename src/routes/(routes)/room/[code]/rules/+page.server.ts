@@ -1,12 +1,13 @@
 import { TOKEN } from '$lib/constants'
-import { Prisma, Role, State } from '@prisma/client'
+import { Prisma, Role, State, WinCondition } from '@prisma/client'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 
 const save = z.object({
 	isWithFreeTile: z.boolean().optional(),
-	isWithHiddenBoards: z.boolean().optional()
+	isWithHiddenBoards: z.boolean().optional(),
+	winCondition: z.enum([WinCondition.ALL_ROWS, WinCondition.FIRST_ROW])
 })
 
 export const load: ServerLoad = async (event) => {
@@ -23,8 +24,10 @@ export const load: ServerLoad = async (event) => {
 				role: true,
 				room: {
 					select: {
+						state: true,
 						isWithFreeTile: true,
-						isWithHiddenBoards: true
+						isWithHiddenBoards: true,
+						winCodition: true
 					}
 				}
 			}
@@ -40,11 +43,17 @@ export const load: ServerLoad = async (event) => {
 		save: superValidate(
 			{
 				isWithFreeTile: player.room.isWithFreeTile,
-				isWithHiddenBoards: player.room.isWithHiddenBoards
+				isWithHiddenBoards: player.room.isWithHiddenBoards,
+				winCondition: player.room.winCodition
 			},
 			save
 		),
-		RulesQuery: { role: player.role }
+		RulesQuery: {
+			role: player.role,
+			room: {
+				state: player.room.state
+			}
+		}
 	}
 }
 
@@ -59,7 +68,8 @@ export const actions = {
 		await event.locals.db.bingo.update({
 			data: {
 				isWithFreeTile: form.data.isWithFreeTile,
-				isWithHiddenBoards: form.data.isWithHiddenBoards
+				isWithHiddenBoards: form.data.isWithHiddenBoards,
+				winCodition: form.data.winCondition
 			},
 			where: {
 				state: { in: [State.SETUP, State.LOCKED] },

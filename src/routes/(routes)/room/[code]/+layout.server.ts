@@ -27,7 +27,7 @@ export const load: ServerLoad = (event) => {
 									role: true,
 									name: true,
 									board: {
-										orderBy: { id: 'asc' },
+										orderBy: { index: 'asc' },
 										select: {
 											id: true,
 											tile: {

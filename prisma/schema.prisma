@@ -31,15 +31,36 @@ model Player {
   @@id([roomCode, userSecret])
 }
 
-model BoardTile {
-  id               Int    @id @default(autoincrement())
-  tileId           String
-  playerRoomCode   String
-  playerUserSecret String
-  player           Player @relation(fields: [playerRoomCode, playerUserSecret], references: [roomCode, userSecret])
-  tile             Tile   @relation(fields: [tileId], references: [id])
+model Row {
+  id    String           @id @default(uuid())
+  tiles BoardTileToRow[]
 
-  @@unique([playerRoomCode, playerUserSecret, tileId])
+  @@map("BoardRow")
+}
+
+model BoardTileToRow {
+  tile           BoardTile @relation(fields: [boardTileId], references: [id])
+  row           Row       @relation(fields: [rowId], references: [id])
+  boardTileId String
+  rowId       String
+
+  @@unique([rowId, boardTileId])
+
+  @@map("_BoardTileToRow")
+}
+
+model BoardTile {
+  id         String           @id @default(uuid())
+  tileId     String
+  roomCode   String           @map("playerRoomCode")
+  userSecret String           @map("playerUserSecret")
+  player     Player           @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
+  tile       Tile             @relation(fields: [tileId], references: [id])
+  rows       BoardTileToRow[]
+  index      Int              @default(autoincrement())
+
+  @@unique([roomCode, userSecret, index])
+  @@unique([roomCode, userSecret, tileId]) // no duplicate tiles for user
 }
 
 model Tile {
@@ -53,13 +74,19 @@ model Tile {
   author     Player      @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
 }
 
+enum WinCondition {
+  FIRST_ROW
+  ALL_ROWS
+}
+
 model Bingo {
-  code    String   @id
-  name    String
-  state   State    @default(SETUP)
-  players Player[]
-  isWithFreeTile Boolean @default(false)
-  isWithHiddenBoards Boolean @default(false)
+  code               String       @id
+  name               String
+  state              State        @default(SETUP)
+  players            Player[]
+  isWithFreeTile     Boolean      @default(false)
+  isWithHiddenBoards Boolean      @default(false)
+  winCodition        WinCondition @default(FIRST_ROW)
 
   @@map("Room")
 }

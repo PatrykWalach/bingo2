@@ -1,5 +1,5 @@
 import { Role, State, TOKEN } from '$lib/constants'
-import { Prisma } from '@prisma/client'
+import { Prisma, WinCondition } from '@prisma/client'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
@@ -223,6 +223,45 @@ export const actions: Actions = {
 						where: {
 							state: State.RUNNING,
 							code: roomCode,
+							winCodition: WinCondition.FIRST_ROW,
+							players: {
+								some: {
+									board: {
+										some: {
+											rows: {
+												some: {
+													row: {
+														tiles: {
+															every: {
+																tile: {
+																	tile: { isComplete: true }
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					})
+				} catch (e) {
+					if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+						return
+					}
+					console.error(e)
+					throw e
+				}
+
+				try {
+					await transaction.bingo.update({
+						data: { state: State.DONE },
+						where: {
+							state: State.RUNNING,
+							code: roomCode,
+							winCodition: WinCondition.ALL_ROWS,
 							players: {
 								some: {
 									board: {
@@ -332,61 +371,66 @@ export const actions: Actions = {
 					throw error(400, 'At least 25 tiles are required!')
 				}
 
-				const freeTileId = crypto.randomUUID()
+				const rows: Prisma.RowCreateManyInput[] = []
+				const boardTileToRows: Prisma.BoardTileToRowCreateManyInput[] = []
+				const boardTiles = bingo.players.flatMap((player) => {
+					const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
+					const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
+					const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
 
-				await Promise.all(
-					bingo.players.map((player) => {
-						const create: Prisma.BoardTileCreateWithoutPlayerInput[] = getRandomElements(
-							tiles,
-							25
-						).map(({ id }) =>
-							Prisma.validator<Prisma.BoardTileCreateWithoutPlayerInput>()({
-								tile: {
-									connect: { id }
-								}
-							})
-						)
+					rows.push(...vertical.map((id) => ({ id })))
+					rows.push(...horizontal.map((id) => ({ id })))
+					rows.push(...diagonal.map((id) => ({ id })))
 
-						if (bingo.isWithFreeTile) {
-							create.splice(12, 1, {
-								tile: {
-									connectOrCreate: {
-										create: {
-											id: freeTileId,
-											content: 'Free',
-											isComplete: true,
-											author: {
-												connect: {
-													roomCode_userSecret: {
-														roomCode: event.params.code,
-														userSecret: secret
-													}
-												}
-											}
-										},
-										where: {
-											id: freeTileId
-										}
-									}
-								}
-							})
+					return getRandomElements(tiles, 25).map((tile, i) => {
+						const rows = [horizontal[Math.floor(i / 5)], vertical[i % 5]]
+
+						if (i % 5 === Math.floor(i / 5)) {
+							rows.push(diagonal[0])
 						}
 
-						return transaction.player.update({
-							where: {
-								roomCode_userSecret: {
-									roomCode: player.roomCode,
-									userSecret: player.userSecret
-								}
-							},
-							data: {
-								board: {
-									create: create
-								}
-							}
+						if (4 - (i % 5) === Math.floor(i / 5)) {
+							rows.push(diagonal[1])
+						}
+
+						const id = crypto.randomUUID()
+						boardTileToRows.push(...rows.map((rowId) => ({ boardTileId: id, rowId })))
+						return Prisma.validator<Prisma.BoardTileCreateManyInput>()({
+							id,
+							index: i,
+							tileId: tile.id,
+							roomCode: player.roomCode,
+							userSecret: player.userSecret
 						})
 					})
-				)
+				})
+
+				if (bingo.isWithFreeTile) {
+					const freeTile = await transaction.tile.create({
+						data: {
+							content: 'Free',
+							isComplete: true,
+							author: {
+								connect: {
+									roomCode_userSecret: {
+										roomCode: event.params.code,
+										userSecret: secret
+									}
+								}
+							}
+						}
+					})
+
+					for (const boardTile of boardTiles.filter(({ index }) => index === 12)) {
+						boardTile.tileId = freeTile.id
+					}
+				}
+
+				await Promise.all([
+					transaction.boardTile.createMany({ data: boardTiles }),
+					transaction.row.createMany({ data: rows })
+				])
+				await transaction.boardTileToRow.createMany({ data: boardTileToRows })
 			})
 		} catch (e) {
 			console.error(e)
