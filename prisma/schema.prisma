@@ -59,6 +59,7 @@ model Bingo {
   state   State    @default(SETUP)
   players Player[]
   isWithFreeTile Boolean @default(false)
+  isWithHiddenBoards Boolean @default(false)
 
   @@map("Room")
 }

@@ -8,7 +8,8 @@ export const load: ServerLoad = (event) => {
 				roomCode_userSecret: {
 					roomCode: String(event.params.code),
 					userSecret: String(event.cookies.get(TOKEN))
-				}
+				},
+				room: { isWithHiddenBoards: false }
 			},
 
 			select: {
