@@ -8,7 +8,7 @@
 	const save = superForm(data.save, {
 		taintedMessage: null
 	})
-	const {form, errors, constraints} = save
+	const { form, errors, constraints } = save
 
 	$: isDone = data.RulesQuery.room.state === State.DONE
 	$: isRunning = isDone || data.RulesQuery.room.state === State.RUNNING
@@ -16,7 +16,11 @@
 
 <main>
 	<form action="" use:save.enhance method="post" on:change={(e) => e.currentTarget.submit()}>
-		<CheckBox disabled={isRunning || data.RulesQuery.role !== Role.GAME_MASTER} form={save} field="isWithFreeTile">
+		<CheckBox
+			disabled={isRunning || data.RulesQuery.role !== Role.GAME_MASTER}
+			form={save}
+			field="isWithFreeTile"
+		>
 			Free tile
 		</CheckBox>
 
@@ -31,10 +35,14 @@
 		<div class="form-control">
 			<label class="label flex cursor-pointer">
 				<span class="label-text flex-1">Win condition</span>
-				<select class="select" disabled={isRunning } name="winCondition" id="winCondition" 
-				aria-invalid={$errors.winCondition ? 'true' : undefined}
-
-				{...$constraints.winCondition}>
+				<select
+					class="select"
+					disabled={isRunning}
+					name="winCondition"
+					id="winCondition"
+					aria-invalid={$errors.winCondition ? 'true' : undefined}
+					{...$constraints.winCondition}
+				>
 					<option value="FIRST_ROW" selected={$form.winCondition === 'FIRST_ROW'}>First Row</option>
 					<option value="ALL_ROWS" selected={$form.winCondition === 'ALL_ROWS'}>All rows</option>
 				</select>
