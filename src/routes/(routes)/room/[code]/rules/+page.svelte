@@ -1,28 +1,50 @@
 <script lang="ts">
 	import CheckBox from '$lib/CheckBox.svelte'
-	import { Role } from '$lib/constants'
+	import { Role, State } from '$lib/constants'
 	import { superForm } from 'sveltekit-superforms/client'
 
 	export let data: import('./$types').PageData
 
-	const form = superForm(data.save, {
+	const save = superForm(data.save, {
 		taintedMessage: null
 	})
+	const {form, errors, constraints} = save
+
+	$: isDone = data.RulesQuery.room.state === State.DONE
+	$: isRunning = isDone || data.RulesQuery.room.state === State.RUNNING
 </script>
 
 <main>
-	<form action="" use:form.enhance method="post" on:change={(e) => e.currentTarget.submit()}>
-		<CheckBox readonly={data.RulesQuery.role !== Role.GAME_MASTER} {form} field="isWithFreeTile">
+	<form action="" use:save.enhance method="post" on:change={(e) => e.currentTarget.submit()}>
+		<CheckBox disabled={isRunning || data.RulesQuery.role !== Role.GAME_MASTER} form={save} field="isWithFreeTile">
 			Free tile
 		</CheckBox>
 
 		<CheckBox
-			readonly={data.RulesQuery.role !== Role.GAME_MASTER}
-			{form}
+			disabled={isRunning || data.RulesQuery.role !== Role.GAME_MASTER}
+			form={save}
 			field="isWithHiddenBoards"
 		>
 			Hide boards
 		</CheckBox>
+
+		<div class="form-control">
+			<label class="label flex cursor-pointer">
+				<span class="label-text flex-1">Win condition</span>
+				<select class="select" disabled={isRunning } name="winCondition" id="winCondition" 
+				aria-invalid={$errors.winCondition ? 'true' : undefined}
+
+				{...$constraints.winCondition}>
+					<option value="FIRST_ROW" selected={$form.winCondition === 'FIRST_ROW'}>First Row</option>
+					<option value="ALL_ROWS" selected={$form.winCondition === 'ALL_ROWS'}>All rows</option>
+				</select>
+			</label>
+			<label class="label" for="winCondition">
+				<span class="label-text-alt text-error">
+					{$errors.winCondition || ''}
+				</span>
+			</label>
+		</div>
 
 		<noscript>
 			<div class="form-control mt-6">

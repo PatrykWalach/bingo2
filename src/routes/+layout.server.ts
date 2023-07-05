@@ -9,6 +9,7 @@ export const load: ServerLoad = (event) => {
 				name: true,
 				state: true
 			},
+			take: 10,
 			where: {
 				players: {
 					some: {
