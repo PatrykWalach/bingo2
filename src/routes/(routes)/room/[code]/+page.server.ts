@@ -230,10 +230,12 @@ export const actions: Actions = {
 										some: {
 											rows: {
 												some: {
-													tiles: {
-														every: {
-															tile: {
-																isComplete: true
+													row: {
+														tiles: {
+															every: {
+																tile: {
+																	tile: { isComplete: true }
+																}
 															}
 														}
 													}
@@ -369,76 +371,66 @@ export const actions: Actions = {
 					throw error(400, 'At least 25 tiles are required!')
 				}
 
-				const freeTileId = crypto.randomUUID()
+				let rows: Prisma.RowCreateManyInput[] = []
+				let boardTileToRows: Prisma.BoardTileToRowCreateManyInput[] = []
+				let boardTiles = bingo.players.flatMap((player) => {
+					const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
+					const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
+					const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
 
-				await Promise.all(
-					bingo.players.map((player) => {
-						const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
-						const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
-						const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
+					rows.push(...vertical.map((id) => ({ id })))
+					rows.push(...horizontal.map((id) => ({ id })))
+					rows.push(...diagonal.map((id) => ({ id })))
 
-						const boardTiles: Prisma.BoardTileCreateWithoutPlayerInput[] = getRandomElements(
-							tiles,
-							25
-						).map(({ id }, i) => {
-							const rows = [horizontal[i / 5], vertical[i % 5]]
+					return getRandomElements(tiles, 25).map((tile, i) => {
+						const rows = [horizontal[Math.floor(i / 5)], vertical[i % 5]]
 
-							if (i % 5 === i / 5) {
-								rows.push(diagonal[0])
-							}
+						if (i % 5 === Math.floor(i / 5)) {
+							rows.push(diagonal[0])
+						}
 
-							if (4 - (i % 5) === i / 5) {
-								rows.push(diagonal[0])
-							}
+						if (4 - (i % 5) === Math.floor(i / 5)) {
+							rows.push(diagonal[1])
+						}
 
-							return Prisma.validator<Prisma.BoardTileCreateWithoutPlayerInput>()({
-								index: i,
-								tile: {
-									connect: { id }
-								},
-								rows: {
-									connectOrCreate: rows.map((id) => ({ create: {}, where: { id } }))
-								}
-							})
+						const id = crypto.randomUUID()
+						boardTileToRows.push(...rows.map((rowId) => ({ boardTileId: id, rowId })))
+						return Prisma.validator<Prisma.BoardTileCreateManyInput>()({
+							id,
+							index: i,
+							tileId: tile.id,
+							roomCode: player.roomCode,
+							userSecret: player.userSecret
 						})
+					})
+				})
 
-						if (bingo.isWithFreeTile) {
-							delete boardTiles[12].tile.connect
-							boardTiles[12].tile.connectOrCreate = {
-								create: {
-									id: freeTileId,
-									content: 'Free',
-									isComplete: true,
-									author: {
-										connect: {
-											roomCode_userSecret: {
-												roomCode: event.params.code,
-												userSecret: secret
-											}
-										}
+				if (bingo.isWithFreeTile) {
+					const freeTile = await transaction.tile.create({
+						data: {
+							content: 'Free',
+							isComplete: true,
+							author: {
+								connect: {
+									roomCode_userSecret: {
+										roomCode: event.params.code,
+										userSecret: secret
 									}
-								},
-								where: {
-									id: freeTileId
 								}
 							}
 						}
-
-						return transaction.player.update({
-							where: {
-								roomCode_userSecret: {
-									roomCode: player.roomCode,
-									userSecret: player.userSecret
-								}
-							},
-							data: {
-								board: {
-									create: boardTiles
-								}
-							}
-						})
 					})
-				)
+
+					for (const boardTile of boardTiles.filter(({ index }) => index === 12)) {
+						boardTile.tileId = freeTile.id
+					}
+				}
+
+				await Promise.all([
+					transaction.boardTile.createMany({ data: boardTiles }),
+					transaction.row.createMany({ data: rows })
+				])
+				await transaction.boardTileToRow.createMany({ data: boardTileToRows })
 			})
 		} catch (e) {
 			console.error(e)

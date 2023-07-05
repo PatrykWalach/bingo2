@@ -5,11 +5,11 @@ export const load: ServerLoad = (event) => {
 	return {
 		BoardQuery: event.locals.db.boardTile.findMany({
 			where: {
-				row: {
-					roomCode: String(event.params.code),
-					userSecret: String(event.cookies.get(TOKEN))
-				},
-				room: { isWithHiddenBoards: false }
+				roomCode: String(event.params.code),
+				userSecret: String(event.cookies.get(TOKEN)),
+				player: {
+					room: { isWithHiddenBoards: false }
+				}
 			},
 			orderBy: {
 				index: 'asc'
