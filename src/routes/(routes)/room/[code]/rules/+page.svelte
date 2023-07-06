@@ -14,6 +14,10 @@
 	$: isRunning = isDone || data.RulesQuery.room.state === State.RUNNING
 </script>
 
+<svelte:head>
+	<title>Room rules</title>
+</svelte:head>
+
 <main>
 	<form action="" use:save.enhance method="post" on:change={(e) => e.currentTarget.submit()}>
 		<CheckBox

@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test'
-import RoomPage from './RoomPage'
+import RoomPage from './room/RoomPage'
 
 export default class JoinRoomPage {
 	async setAvatar(arg0: string) {

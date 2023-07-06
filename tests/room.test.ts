@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
 import HomePage from './routes/HomePage'
+import type RoomPage from './routes/room/RoomPage'
+import type { Tile } from './routes/room/RoomPage'
 
 test('create room', async ({ page }) => {
 	// given
@@ -54,4 +56,50 @@ test('join room', async ({ browser }) => {
 
 	await gameMasterContext.close()
 	await playerContext.close()
+})
+
+import crypto from 'node:crypto'
+
+const extended = test.extend<{ room: RoomPage }>({
+	room: async ({ page }, use) => {
+		// given
+		await page.goto('/')
+		const home = new HomePage(page)
+		const createroom = await home.navigateToCreateRoom()
+
+		await createroom.setName('Gierka')
+		const joinRoom = await createroom.submit()
+
+		await joinRoom.setAvatar('snowy owl')
+		await joinRoom.setColor('#fca15c')
+		await joinRoom.setName('Foo')
+		// when
+		const room = await joinRoom.submit()
+		await use(room)
+	}
+})
+
+extended('win all rows', async ({ room }) => {
+	extended.slow()
+	// given
+	const tiles: Tile[] = []
+
+	const rulespage = await room.navigateToRules()
+
+	await rulespage.setWinCondition('ALL_ROWS')
+
+	room = await rulespage.navigateToTiles()
+
+	for (let i = 0; i < 25; i++) {
+		tiles.push(await room.createTile(`Tile ${crypto.randomUUID()} `))
+	}
+
+	await room.lock()
+	await room.start()
+	for (const tile of tiles) {
+		await tile.complete()
+	}
+	await expect
+		.soft(room.main.locator('div').filter({ hasText: 'Foo 25 Game Master You' }))
+		.toBeVisible()
 })

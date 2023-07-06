@@ -3,7 +3,7 @@ import JoinRoomPage from './JoinRoomPage'
 
 export default class CreateRoomPage {
 	async submit() {
-		await this.main.getByRole('button', { name: 'create' }).click()
+		await this.main.getByRole('button', { name: 'Create' }).click()
 		await expect.soft(this.page).toHaveTitle('Join room')
 		return new JoinRoomPage(this.page)
 	}
