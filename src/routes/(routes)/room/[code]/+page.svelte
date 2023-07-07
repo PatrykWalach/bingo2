@@ -13,9 +13,9 @@
 	export let data: PageData
 
 	const createTile = superForm(data.createTile)
-	const lockRoom = superForm(data.lockRoom, {  })
-	const unlockRoom = superForm(data.unlockRoom, {  })
-	const startRoom = superForm(data.startRoom, {  })
+	const lockRoom = superForm(data.lockRoom, {})
+	const unlockRoom = superForm(data.unlockRoom, {})
+	const startRoom = superForm(data.startRoom, {})
 	const { delayed: createDelayed, formId: createId } = createTile
 	const { delayed: lockDelayed, formId: lockId } = lockRoom
 	const { delayed: startDelayed, formId: startId } = startRoom
@@ -69,7 +69,6 @@
 		ids: deleteIds,
 		enhances: deleteEnhances
 	} = deriveForms(ids, { form: data.deleteTile, formId: 'delete-' }))
-
 </script>
 
 <svelte:head>
@@ -160,14 +159,13 @@
 				</button>
 			</form>
 		{:else if !isRunning}
-			<form use:startRoom.enhance method="post" 			action="?/start_bingo">
+			<form use:startRoom.enhance method="post" action="?/start_bingo">
 				<input type="hidden" name="__superform_id" bind:value={$startId} />
 				<input type="hidden" value={$socketId} name="socketId" />
 				<button
 					type="submit"
-					class="btn-primary btn cursor-default w-full"
+					class="btn-primary btn w-full cursor-default"
 					disabled={data.Tiles.length < 25}
-		
 				>
 					{#if $startDelayed}
 						<span class="loading loading-spinner" />
@@ -178,7 +176,7 @@
 			<form use:unlockRoom.enhance method="post" action="?/unlock_bingo">
 				<input type="hidden" name="__superform_id" bind:value={$unlockId} />
 				<input type="hidden" value={$socketId} name="socketId" />
-				<button type="submit" class="btn-accent btn cursor-default w-full" >
+				<button type="submit" class="btn-accent btn w-full cursor-default">
 					{#if $unlockDelayed}
 						<span class="loading loading-spinner" />
 					{/if}

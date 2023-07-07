@@ -63,10 +63,11 @@
 						<TextField form={join} field="name">Name</TextField>
 
 						<div class="form-control mt-6">
-							<button type="submit" class="btn-primary btn cursor-default">						{#if $delayed}
-								<span class="loading loading-spinner"></span>
-
-							{/if }Join</button>
+							<button type="submit" class="btn-primary btn cursor-default">
+								{#if $delayed}
+									<span class="loading loading-spinner" />
+								{/if}Join
+							</button>
 						</div>
 					</fieldset>
 				</form>

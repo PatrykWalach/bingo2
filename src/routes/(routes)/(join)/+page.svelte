@@ -31,11 +31,11 @@
 						<div class="form-control mt-6">
 							<button type="submit" class="btn-primary btn cursor-default">
 								{#if $delayed}
-								  <span class="loading loading-spinner"></span>
+									<span class="loading loading-spinner" />
+								{/if}
 
-								{/if }
-								
-								Join</button>
+								Join
+							</button>
 						</div>
 					</fieldset>
 				</form>
