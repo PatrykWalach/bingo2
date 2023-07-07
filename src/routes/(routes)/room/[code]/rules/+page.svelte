@@ -8,7 +8,7 @@
 	const save = superForm(data.save, {
 		taintedMessage: null
 	})
-	const { form, errors, constraints } = save
+	const { form, errors, constraints, delayed } = save
 
 	$: isDone = data.RulesQuery.room.state === State.DONE
 	$: isRunning = isDone || data.RulesQuery.room.state === State.RUNNING
@@ -56,7 +56,11 @@
 
 		<noscript>
 			<div class="form-control mt-6">
-				<button type="submit" class="btn-primary btn">save</button>
+				<button type="submit" class="btn-primary btn">
+					{#if $delayed}
+						<span class="loading loading-spinner" />
+					{/if}save
+				</button>
 			</div>
 		</noscript>
 	</form>
