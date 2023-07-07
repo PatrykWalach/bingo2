@@ -18,7 +18,7 @@
 
 <div class="mx-auto w-full max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
 	<div class="">
-		<main class="grid gap-8 py-4 md:grid-cols-2 xl:grid-cols-3">
+		<div class="grid gap-8 py-4 md:grid-cols-2 xl:grid-cols-3">
 			<section class="flex flex-col gap-4">
 				<div class="form-control">
 					<label class="label" for={'code'}>
@@ -131,6 +131,6 @@
 
 				<slot />
 			</section>
-		</main>
+		</div>
 	</div>
 </div>

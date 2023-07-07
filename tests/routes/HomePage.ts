@@ -1,24 +1,24 @@
-import { expect, type Locator, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import CreateRoomPage from './CreateRoomPage'
 import JoinRoomPage from './JoinRoomPage'
+import RootLayout from './RootLayout'
 
-export default class HomePage {
+export default class HomePage extends RootLayout {
 	async joinRoom() {
 		await this.main.getByRole('button', { name: 'join' }).click()
-		await expect.soft(this.page).toHaveTitle('Join room')
-		return new JoinRoomPage(this.page)
+
+		return JoinRoomPage.new(this.page)
 	}
 	async setCode(code: string) {
 		await this.main.getByLabel('code').fill(code)
 	}
 	async navigateToCreateRoom() {
 		await this.page.getByRole('link', { name: 'Or create room' }).click()
-		await expect.soft(this.page).toHaveTitle('Create room')
-		return new CreateRoomPage(this.page)
-	}
-	main: Locator
 
-	constructor(private page: Page) {
-		this.main = this.page.getByRole('main')
+		return CreateRoomPage.new(this.page)
+	}
+
+	constructor(page: Page) {
+		super(page)
 	}
 }

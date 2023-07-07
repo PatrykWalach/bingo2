@@ -20,7 +20,7 @@ test('create room', async ({ page }) => {
 	// then
 	await expect.soft(room.main.getByText('Foo')).toBeVisible()
 })
-
+ 
 test('join room', async ({ browser }) => {
 	// given game master
 	const gameMasterContext = await browser.newContext()

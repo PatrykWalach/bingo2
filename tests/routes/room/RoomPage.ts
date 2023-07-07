@@ -29,7 +29,12 @@ export default class RoomPage extends RoomLayout {
 
 	code: Locator
 
-	constructor(page: Page) {
+	public static async new(page: Page) {
+		await expect.soft(page).toHaveTitle(/Room.*/)
+		return new RoomPage(page)
+	}
+
+	private constructor(page: Page) {
 		super(page)
 		this.code = page.getByLabel('code')
 	}

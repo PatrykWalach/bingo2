@@ -18,7 +18,7 @@
 	<title>Room rules</title>
 </svelte:head>
 
-<main>
+<div>
 	<form action="" use:save.enhance method="post" on:change={(e) => e.currentTarget.submit()}>
 		<CheckBox
 			disabled={isRunning || data.RulesQuery.role !== Role.GAME_MASTER}
@@ -68,4 +68,4 @@
 			</div>
 		</noscript>
 	</form>
-</main>
+</div>

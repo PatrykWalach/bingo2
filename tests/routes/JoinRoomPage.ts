@@ -1,7 +1,8 @@
-import { expect, type Locator, type Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 import RoomPage from './room/RoomPage'
+import RootLayout from './RootLayout'
 
-export default class JoinRoomPage {
+export default class JoinRoomPage extends RootLayout {
 	async setAvatar(arg0: string) {
 		await this.main
 			.getByRole('img', {
@@ -23,12 +24,16 @@ export default class JoinRoomPage {
 				name: 'Join'
 			})
 			.click()
-		await expect.soft(this.page).toHaveTitle(/Room.*/)
-		return new RoomPage(this.page)
-	}
-	main: Locator
 
-	constructor(private page: Page) {
-		this.main = this.page.getByRole('main')
+		return RoomPage.new(this.page)
+	}
+
+	public static async new(page: Page) {
+		await expect.soft(page).toHaveTitle('Join room')
+		return new JoinRoomPage(page)
+	}
+
+	private constructor(page: Page) {
+		super(page)
 	}
 }
