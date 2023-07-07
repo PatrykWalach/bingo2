@@ -5,14 +5,41 @@ import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import type { Actions, RequestEvent } from './$types'
 
-const create = z.object({
+const createTile = z.object({
 	content: z.string(),
+	socketId: z.coerce.string().optional()
+})
+
+const deleteTile = z.object({
+	id: z.string(),
+	socketId: z.coerce.string().optional()
+})
+
+const completeTile = z.object({
+	id: z.string(),
+	socketId: z.coerce.string().optional(),
+	isComplete: z.coerce.boolean()
+})
+
+const lockRoom = z.object({
+	socketId: z.coerce.string().optional()
+})
+const unlockRoom = z.object({
+	socketId: z.coerce.string().optional()
+})
+const startRoom = z.object({
 	socketId: z.coerce.string().optional()
 })
 
 export const load: ServerLoad = (event) => {
 	return {
-		create: superValidate(create),
+		createTile: superValidate(createTile),
+		deleteTile: superValidate(deleteTile),
+		completeTile: superValidate(completeTile),
+		lockRoom: superValidate(lockRoom, { id: 'lockRoom' }),
+		unlockRoom: superValidate(unlockRoom, { id: 'unlockRoom' }),
+		startRoom: superValidate(startRoom, { id: 'startRoom' }),
+
 		Tiles: event.locals.db.tile.findMany({
 			where: {
 				roomCode: String(event.params.code)
@@ -76,10 +103,10 @@ export const load: ServerLoad = (event) => {
 
 export const actions: Actions = {
 	create_tile: async (event) => {
-		const form = await superValidate(event, create)
+		const form = await superValidate(event, createTile)
 
 		if (!form.valid) {
-			return fail(400, { form: form })
+			return fail(400, { createTile: form })
 		}
 
 		const secret = getSecretOrThrow(event)
@@ -116,11 +143,10 @@ export const actions: Actions = {
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	delete_tile: async (event) => {
-		const form = await event.request.formData()
-		const id = form.get('id')
+		const form = await superValidate(event, deleteTile)
 
-		if (typeof id !== 'string') {
-			throw error(400, 'No `id`!')
+		if (!form.valid) {
+			return fail(400, { deleteTile: form })
 		}
 
 		const secret = getSecretOrThrow(event)
@@ -128,7 +154,7 @@ export const actions: Actions = {
 		try {
 			await event.locals.db.tile.delete({
 				where: {
-					id,
+					id: form.data.id,
 					author: {
 						room: {
 							state: {
@@ -162,16 +188,15 @@ export const actions: Actions = {
 			throw e
 		}
 
-		invalidateRoom(event, getSocketId(form))
+		invalidateRoom(event, form.data.socketId)
 
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	toggle_tile: async (event) => {
-		const form = await event.request.formData()
-		const id = form.get('id')
+		const form = await superValidate(event, completeTile)
 
-		if (typeof id !== 'string') {
-			throw error(400, 'No `id`!')
+		if (!form.valid) {
+			return fail(400, { completeTile: form })
 		}
 
 		const secret = getSecretOrThrow(event)
@@ -180,10 +205,10 @@ export const actions: Actions = {
 			await event.locals.db.$transaction(async (transaction) => {
 				const { isComplete, roomCode } = await transaction.tile.update({
 					data: {
-						isComplete: 'true' === form.get('isComplete')
+						isComplete: !form.data.isComplete
 					},
 					where: {
-						id,
+						id: form.data.id,
 						author: {
 							room: {
 								state: {
@@ -288,11 +313,17 @@ export const actions: Actions = {
 			throw e
 		}
 
-		invalidateRoom(event, getSocketId(form))
+		invalidateRoom(event, form.data.socketId)
 
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	lock_room: async (event) => {
+		const form = await superValidate(event, lockRoom)
+
+		if (!form.valid) {
+			return fail(400, { lockRoom: form })
+		}
+
 		const secret = getSecretOrThrow(event)
 
 		try {
@@ -313,11 +344,17 @@ export const actions: Actions = {
 			throw e
 		}
 
-		getTokenId(event).then((socketId) => invalidateRoom(event, socketId))
+		invalidateRoom(event, form.data.socketId)
 
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	unlock_bingo: async (event) => {
+		const form = await superValidate(event, unlockRoom)
+
+		if (!form.valid) {
+			return fail(400, { unlockRoom: form })
+		}
+
 		const secret = getSecretOrThrow(event)
 
 		try {
@@ -338,11 +375,17 @@ export const actions: Actions = {
 			throw e
 		}
 
-		getTokenId(event).then((socketId) => invalidateRoom(event, socketId))
+		invalidateRoom(event, form.data.socketId)
 
 		throw redirect(303, `/room/${event.params.code}`)
 	},
 	start_bingo: async (event) => {
+		const form = await superValidate(event, startRoom)
+
+		if (!form.valid) {
+			return fail(400, { startRoom: form })
+		}
+
 		const secret = getSecretOrThrow(event)
 
 		try {
@@ -437,7 +480,7 @@ export const actions: Actions = {
 			throw e
 		}
 
-		getTokenId(event).then((socketId) => invalidateRoom(event, socketId))
+		invalidateRoom(event, form.data.socketId)
 
 		throw redirect(303, `/room/${event.params.code}`)
 	}
