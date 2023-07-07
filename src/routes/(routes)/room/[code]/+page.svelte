@@ -1,19 +1,74 @@
 <script lang="ts">
-	import { enhance } from '$app/forms'
 	import TextInput from '$lib/TextInput.svelte'
 	import { Role, State } from '$lib/constants'
 	import { socketId } from '$lib/socket'
+	import { derived } from 'svelte/store'
+	import type { SuperValidated } from 'sveltekit-superforms'
 	import { superForm } from 'sveltekit-superforms/client'
 	import type { PageData } from './$types'
 
+	import type { ZodValidation } from 'sveltekit-superforms'
+	import type { AnyZodObject } from 'zod'
+
 	export let data: PageData
 
-	const form = superForm(data.create)
+	const createTile = superForm(data.createTile)
+	const lockRoom = superForm(data.lockRoom, {})
+	const unlockRoom = superForm(data.unlockRoom, {})
+	const startRoom = superForm(data.startRoom, {})
+	const { delayed: createDelayed, formId: createId } = createTile
+	const { delayed: lockDelayed, formId: lockId } = lockRoom
+	const { delayed: startDelayed, formId: startId } = startRoom
+	const { delayed: unlockDelayed, formId: unlockId } = unlockRoom
 
 	$: isGameMaster = data.Viewer.role === Role.GAME_MASTER
 	$: isDone = data.LayoutViewer.room.state === State.DONE
 	$: isRunning = data.LayoutViewer.room.state === State.RUNNING || isDone
 	$: isLocked = data.LayoutViewer.room.state === State.LOCKED || isRunning
+
+	function deriveForms<
+		T extends ZodValidation<AnyZodObject> = ZodValidation<AnyZodObject>,
+		M = any
+	>(keys: string[], { form, formId }: { form: SuperValidated<T, M>; formId: string }) {
+		const tiles = keys.map((key) => [key, superForm(form, { id: formId + key })] as const)
+
+		const delayes = derived(
+			tiles.map(([id, complete]) =>
+				derived(complete.delayed, ($delayed) => [id, $delayed] as const)
+			),
+			(values) => Object.fromEntries(values)
+		)
+
+		const ids = derived(
+			tiles.map(([id, complete]) => derived(complete.formId, (formId) => [id, formId] as const)),
+			(values) => Object.fromEntries(values)
+		)
+
+		const enhances = Object.fromEntries(
+			tiles.map(([id, complete]) => [id, complete.enhance] as const)
+		)
+
+		return {
+			tiles,
+			delayes: delayes,
+			ids,
+			enhances
+		}
+	}
+
+	$: ids = data.Tiles.map((tile) => tile.id)
+
+	$: ({
+		delayes: completeDelayed,
+		ids: completeIds,
+		enhances: completeEnhances
+	} = deriveForms(ids, { form: data.completeTile, formId: 'complete-' }))
+
+	$: ({
+		delayes: deleteDelayed,
+		ids: deleteIds,
+		enhances: deleteEnhances
+	} = deriveForms(ids, { form: data.deleteTile, formId: 'delete-' }))
 </script>
 
 <svelte:head>
@@ -35,12 +90,18 @@
 
 					<div class="card-actions">
 						{#if isGameMaster && !isDone}
+							{@const enhance = completeEnhances[tile.id]}
 							<form action="?/toggle_tile" method="post" use:enhance>
+								<input type="hidden" name="__superform_id" bind:value={$completeIds[tile.id]} />
+
 								<button class="btn-primary btn-xs btn cursor-default" type="submit">
+									{#if $completeDelayed[tile.id]}
+										<span class="loading loading-spinner loading-xs" />
+									{/if}
 									{!tile.isComplete ? '' : 'in'}complete
 								</button>
 								<input type="hidden" value={$socketId} name="socketId" />
-								<input type="hidden" value={!tile.isComplete} name="isComplete" />
+								<input type="hidden" value={tile.isComplete || ''} name="isComplete" />
 								<input type="hidden" value={tile.id} name="id" />
 							</form>
 						{/if}
@@ -70,38 +131,59 @@
 		</div>
 	{/if}
 	{#if !isLocked || (!isRunning && isGameMaster)}
-		<form use:enhance method="post" action="?/create_tile" class="join flex">
-			<TextInput {form} field="content" class="input-primary input join-item flex-1" />
+		<form use:createTile.enhance method="post" action="?/create_tile" class="join flex">
+			<input type="hidden" name="__superform_id" bind:value={$createId} />
+
+			<TextInput form={createTile} field="content" class="input-primary input join-item flex-1" />
 			<input type="hidden" value={$socketId} name="socketId" />
-			<button type="submit" class="btn-primary join-item btn cursor-default">Create</button>
+			<button type="submit" class="btn-primary join-item btn cursor-default">
+				{#if $createDelayed}
+					<span class="loading loading-spinner" />
+				{/if}Create
+			</button>
 		</form>
 	{/if}
 
 	{#if !isRunning && isGameMaster}
 		<div class="divider">Game master</div>
-		<form use:enhance method="post">
-			<fieldset class="grid gap-2">
-				<legend class="sr-only">Game master</legend>
-				{#if !isLocked}
-					<button type="submit" formaction="?/lock_room" class="btn-accent btn cursor-default">
-						Lock
-					</button>
-				{:else if !isRunning}
-					<button
-						type="submit"
-						class="btn-primary btn cursor-default"
-						disabled={data.Tiles.length < 25}
-						formaction="?/start_bingo"
-					>
-						{data.Tiles.length < 25 ? '25 tiles required' : 'Start'}
-					</button>
-					<button type="submit" class="btn-accent btn cursor-default" formaction="?/unlock_bingo">
-						Unlock
-					</button>
-				{/if}
-			</fieldset>
-			<input type="hidden" value={$socketId} name="socketId" />
-		</form>
+
+		{#if !isLocked}
+			<form use:lockRoom.enhance method="post" action="?/lock_room">
+				<input type="hidden" name="__superform_id" bind:value={$lockId} />
+				<input type="hidden" value={$socketId} name="socketId" />
+				<button type="submit" class="btn-accent btn w-full cursor-default">
+					{#if $lockDelayed}
+						<span class="loading loading-spinner" />
+					{/if}
+					Lock
+				</button>
+			</form>
+		{:else if !isRunning}
+			<form use:startRoom.enhance method="post" action="?/start_bingo">
+				<input type="hidden" name="__superform_id" bind:value={$startId} />
+				<input type="hidden" value={$socketId} name="socketId" />
+				<button
+					type="submit"
+					class="btn-primary btn w-full cursor-default"
+					disabled={data.Tiles.length < 25}
+				>
+					{#if $startDelayed}
+						<span class="loading loading-spinner" />
+					{/if}
+					{data.Tiles.length < 25 ? '25 tiles required' : 'Start'}
+				</button>
+			</form>
+			<form use:unlockRoom.enhance method="post" action="?/unlock_bingo">
+				<input type="hidden" name="__superform_id" bind:value={$unlockId} />
+				<input type="hidden" value={$socketId} name="socketId" />
+				<button type="submit" class="btn-accent btn w-full cursor-default">
+					{#if $unlockDelayed}
+						<span class="loading loading-spinner" />
+					{/if}
+					Unlock
+				</button>
+			</form>
+		{/if}
 	{/if}
 </div>
 
@@ -114,6 +196,7 @@
 </footer>
 
 {#each data.Tiles as tile (tile.id)}
+	{@const enhance = deleteEnhances[tile.id]}
 	<input type="checkbox" id="delete-tile-{tile.id}" class="modal-toggle" />
 	<div class="modal">
 		<div class="modal-box">
@@ -128,8 +211,14 @@
 			</div>
 
 			<form use:enhance method="post" action="?/delete_tile" class="modal-action">
+				<input type="hidden" name="__superform_id" bind:value={$deleteIds[tile.id]} />
+
 				<input type="hidden" value={tile.id} name="id" />
-				<button class="btn-error btn cursor-default" type="submit">delete</button>
+				<button class="btn-error btn cursor-default" type="submit">
+					{#if $deleteDelayed[tile.id]}
+						<span class="loading loading-spinner" />
+					{/if}delete
+				</button>
 
 				<input type="hidden" value={$socketId} name="socketId" />
 			</form>

@@ -6,7 +6,7 @@
 	export let data: PageData
 
 	const create = superForm(data.create)
-	const { errors: createErrors, formId: createId } = create
+	const { errors: createErrors, formId: createId, delayed } = create
 </script>
 
 <svelte:head>
@@ -30,7 +30,12 @@
 							Name
 						</TextField>
 						<div class="form-control mt-6">
-							<button type="submit" class="btn-primary btn cursor-default">Create</button>
+							<button type="submit" class="btn-primary btn cursor-default">
+								{#if $delayed}
+									<span class="loading loading-spinner" />
+								{/if}
+								Create
+							</button>
 						</div>
 					</fieldset>
 				</form>
