@@ -86,7 +86,7 @@ export const actions: Actions = {
 			'invalidate',
 			{},
 			{
-				socket_id: form.data.socketId
+				socket_id: form.data.socketId || undefined
 			}
 		)
 		throw redirect(303, `/room/${event.params.code}`)

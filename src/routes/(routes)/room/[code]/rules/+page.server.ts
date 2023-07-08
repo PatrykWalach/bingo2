@@ -77,7 +77,7 @@ export const actions = {
 				players: {
 					some: {
 						role: Role.GAME_MASTER,
-						userSecret: event.cookies.get(TOKEN)
+						userSecret: String(event.cookies.get(TOKEN))
 					}
 				}
 			}

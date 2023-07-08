@@ -44,17 +44,17 @@
 
 <div class="drawer lg:drawer-open">
 	<input id="drawer-input" type="checkbox" class="drawer-toggle" />
-	<div class="drawer-content">
+	<main class="drawer-content">
 		<slot />
 
 		<label
 			for="drawer-input"
-			class="btn-primary drawer-button btn fixed bottom-4 right-4 cursor-default lg:hidden"
+			class="btn-primary drawer-button btn fixed bottom-4 right-4 lg:hidden"
 		>
 			Open drawer
 		</label>
-	</div>
-	<div class="drawer-side">
+	</main>
+	<nav class="drawer-side">
 		<label for="drawer-input" class="drawer-overlay" />
 		<ul class="menu h-full w-80 bg-base-200 p-4 text-base-content">
 			{#each data.RootLayout as room (room.code)}
@@ -63,5 +63,5 @@
 				<li>No rooms yet, join some</li>
 			{/each}
 		</ul>
-	</div>
+	</nav>
 </div>

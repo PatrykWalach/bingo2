@@ -7,28 +7,28 @@ import type { Actions, RequestEvent } from './$types'
 
 const createTile = z.object({
 	content: z.string(),
-	socketId: z.coerce.string().optional()
+	socketId: z.string().optional()
 })
 
 const deleteTile = z.object({
 	id: z.string(),
-	socketId: z.coerce.string().optional()
+	socketId: z.string().optional()
 })
 
 const completeTile = z.object({
 	id: z.string(),
-	socketId: z.coerce.string().optional(),
+	socketId: z.string().optional(),
 	isComplete: z.coerce.boolean()
 })
 
 const lockRoom = z.object({
-	socketId: z.coerce.string().optional()
+	socketId: z.string().optional()
 })
 const unlockRoom = z.object({
-	socketId: z.coerce.string().optional()
+	socketId: z.string().optional()
 })
 const startRoom = z.object({
-	socketId: z.coerce.string().optional()
+	socketId: z.string().optional()
 })
 
 export const load: ServerLoad = (event) => {
@@ -508,7 +508,7 @@ function invalidateRoom(event: RequestEvent, socketId: string | undefined) {
 		'invalidate',
 		{},
 		{
-			socket_id: socketId
+			socket_id: socketId || undefined
 		}
 	)
 }
