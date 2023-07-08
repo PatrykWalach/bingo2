@@ -162,11 +162,7 @@
 			<form use:startRoom.enhance method="post" action="?/start_bingo">
 				<input type="hidden" name="__superform_id" bind:value={$startId} />
 				<input type="hidden" value={$socketId} name="socketId" />
-				<button
-					type="submit"
-					class="btn-primary btn w-full"
-					disabled={data.Tiles.length < 25}
-				>
+				<button type="submit" class="btn-primary btn w-full" disabled={data.Tiles.length < 25}>
 					{#if $startDelayed}
 						<span class="loading loading-spinner" />
 					{/if}

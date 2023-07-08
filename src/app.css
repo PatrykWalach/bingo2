@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 .btn {
-  @apply cursor-default;
+	@apply cursor-default;
 }
