@@ -94,7 +94,7 @@
 							<form action="?/toggle_tile" method="post" use:enhance>
 								<input type="hidden" name="__superform_id" bind:value={$completeIds[tile.id]} />
 
-								<button class="btn-primary btn-xs btn cursor-default" type="submit">
+								<button class="btn-primary btn-xs btn" type="submit">
 									{#if $completeDelayed[tile.id]}
 										<span class="loading loading-spinner loading-xs" />
 									{/if}
@@ -136,7 +136,7 @@
 
 			<TextInput form={createTile} field="content" class="input-primary input join-item flex-1" />
 			<input type="hidden" value={$socketId} name="socketId" />
-			<button type="submit" class="btn-primary join-item btn cursor-default">
+			<button type="submit" class="btn-primary join-item btn">
 				{#if $createDelayed}
 					<span class="loading loading-spinner" />
 				{/if}Create
@@ -151,7 +151,7 @@
 			<form use:lockRoom.enhance method="post" action="?/lock_room">
 				<input type="hidden" name="__superform_id" bind:value={$lockId} />
 				<input type="hidden" value={$socketId} name="socketId" />
-				<button type="submit" class="btn-accent btn w-full cursor-default">
+				<button type="submit" class="btn-accent btn w-full">
 					{#if $lockDelayed}
 						<span class="loading loading-spinner" />
 					{/if}
@@ -164,7 +164,7 @@
 				<input type="hidden" value={$socketId} name="socketId" />
 				<button
 					type="submit"
-					class="btn-primary btn w-full cursor-default"
+					class="btn-primary btn w-full"
 					disabled={data.Tiles.length < 25}
 				>
 					{#if $startDelayed}
@@ -176,7 +176,7 @@
 			<form use:unlockRoom.enhance method="post" action="?/unlock_bingo">
 				<input type="hidden" name="__superform_id" bind:value={$unlockId} />
 				<input type="hidden" value={$socketId} name="socketId" />
-				<button type="submit" class="btn-accent btn w-full cursor-default">
+				<button type="submit" class="btn-accent btn w-full">
 					{#if $unlockDelayed}
 						<span class="loading loading-spinner" />
 					{/if}
@@ -214,7 +214,7 @@
 				<input type="hidden" name="__superform_id" bind:value={$deleteIds[tile.id]} />
 
 				<input type="hidden" value={tile.id} name="id" />
-				<button class="btn-error btn cursor-default" type="submit">
+				<button class="btn-error btn" type="submit">
 					{#if $deleteDelayed[tile.id]}
 						<span class="loading loading-spinner" />
 					{/if}delete

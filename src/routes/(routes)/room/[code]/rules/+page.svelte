@@ -37,7 +37,7 @@
 		</CheckBox>
 
 		<div class="form-control">
-			<label class="label flex cursor-pointer">
+			<label class="label flex">
 				<span class="label-text flex-1">Win condition</span>
 				<select
 					class="select"
