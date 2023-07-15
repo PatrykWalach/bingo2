@@ -1,6 +1,5 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["extendedWhereUnique"]
 }
 
 datasource db {
@@ -39,13 +38,12 @@ model Row {
 }
 
 model BoardTileToRow {
-  tile           BoardTile @relation(fields: [boardTileId], references: [id])
-  row           Row       @relation(fields: [rowId], references: [id])
+  tile        BoardTile @relation(fields: [boardTileId], references: [id])
+  row         Row       @relation(fields: [rowId], references: [id])
   boardTileId String
   rowId       String
 
   @@unique([rowId, boardTileId])
-
   @@map("_BoardTileToRow")
 }
 
