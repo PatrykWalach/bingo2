@@ -486,9 +486,6 @@ export const actions: Actions = {
 	}
 }
 
-
-
-
 function invalidateRoom(event: RequestEvent, socketId: string | undefined) {
 	return event.locals.pusher.trigger(
 		`/room/${event.params.code}`.replaceAll('/', '-'),
