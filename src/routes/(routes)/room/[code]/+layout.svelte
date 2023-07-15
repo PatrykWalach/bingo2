@@ -7,7 +7,7 @@
 
 	$: isDone = data.LayoutViewer.room.state === State.DONE
 	$: isRunning = data.LayoutViewer.room.state === State.RUNNING || isDone
-	$: isLocked = data.LayoutViewer.room.state === State.LOCKED || isRunning
+	// $: isLocked = data.LayoutViewer.room.state === State.LOCKED || isRunning
 
 	function comparingNumber<V>(key: (value: V) => number) {
 		return (a: V, b: V) => key(a) - key(b)

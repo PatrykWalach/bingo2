@@ -28,7 +28,7 @@
 
 	function deriveForms<
 		T extends ZodValidation<AnyZodObject> = ZodValidation<AnyZodObject>,
-		M = any
+		M = unknown
 	>(keys: string[], { form, formId }: { form: SuperValidated<T, M>; formId: string }) {
 		const tiles = keys.map((key) => [key, superForm(form, { id: formId + key })] as const)
 
