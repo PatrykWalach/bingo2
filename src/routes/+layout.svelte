@@ -10,13 +10,11 @@
 
 	let unsubscriber = (): void => undefined
 
+	const pathname = derived(page, ($page) => $page.url.pathname)
 
-	
-const pathname = derived(page, ($page) => $page.url.pathname)
+	onMount(async () => {
+		const { pusher } = await import('$lib/socket.client')
 
-onMount(async () => {
-	const { pusher } = await import('$lib/socket.client')
-	
 		let clean = (): void => undefined
 
 		unsubscriber = pathname.subscribe(
