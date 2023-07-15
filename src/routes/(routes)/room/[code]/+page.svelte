@@ -94,7 +94,7 @@
 							<form action="?/toggle_tile" method="post" use:enhance>
 								<input type="hidden" name="__superform_id" bind:value={$completeIds[tile.id]} />
 
-								<button class="btn-primary btn-xs btn cursor-default" type="submit">
+								<button class="btn btn-primary btn-xs cursor-default" type="submit">
 									{#if $completeDelayed[tile.id]}
 										<span class="loading loading-spinner loading-xs" />
 									{/if}
@@ -107,7 +107,7 @@
 						{/if}
 
 						{#if (isGameMaster || data.Viewer.user.id === tile.author.user.id) && !isRunning}
-							<label for="delete-tile-{tile.id}" class="btn-error btn-xs btn">delete</label>
+							<label for="delete-tile-{tile.id}" class="btn btn-error btn-xs">delete</label>
 						{/if}
 					</div>
 				</div>
@@ -134,9 +134,9 @@
 		<form use:createTile.enhance method="post" action="?/create_tile" class="join flex">
 			<input type="hidden" name="__superform_id" bind:value={$createId} />
 
-			<TextInput form={createTile} field="content" class="input-primary input join-item flex-1" />
+			<TextInput form={createTile} field="content" class="input join-item input-primary flex-1" />
 			<input type="hidden" value={$socketId} name="socketId" />
-			<button type="submit" class="btn-primary join-item btn cursor-default">
+			<button type="submit" class="btn btn-primary join-item cursor-default">
 				{#if $createDelayed}
 					<span class="loading loading-spinner" />
 				{/if}Create
@@ -151,7 +151,7 @@
 			<form use:lockRoom.enhance method="post" action="?/lock_room">
 				<input type="hidden" name="__superform_id" bind:value={$lockId} />
 				<input type="hidden" value={$socketId} name="socketId" />
-				<button type="submit" class="btn-accent btn w-full cursor-default">
+				<button type="submit" class="btn btn-accent w-full cursor-default">
 					{#if $lockDelayed}
 						<span class="loading loading-spinner" />
 					{/if}
@@ -164,7 +164,7 @@
 				<input type="hidden" value={$socketId} name="socketId" />
 				<button
 					type="submit"
-					class="btn-primary btn w-full cursor-default"
+					class="btn btn-primary w-full cursor-default"
 					disabled={data.Tiles.length < 25}
 				>
 					{#if $startDelayed}
@@ -176,7 +176,7 @@
 			<form use:unlockRoom.enhance method="post" action="?/unlock_bingo">
 				<input type="hidden" name="__superform_id" bind:value={$unlockId} />
 				<input type="hidden" value={$socketId} name="socketId" />
-				<button type="submit" class="btn-accent btn w-full cursor-default">
+				<button type="submit" class="btn btn-accent w-full cursor-default">
 					{#if $unlockDelayed}
 						<span class="loading loading-spinner" />
 					{/if}
@@ -214,7 +214,7 @@
 				<input type="hidden" name="__superform_id" bind:value={$deleteIds[tile.id]} />
 
 				<input type="hidden" value={tile.id} name="id" />
-				<button class="btn-error btn cursor-default" type="submit">
+				<button class="btn btn-error cursor-default" type="submit">
 					{#if $deleteDelayed[tile.id]}
 						<span class="loading loading-spinner" />
 					{/if}delete
