@@ -1,3 +1,9 @@
+-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('GAME_MASTER', 'PLAYER');
+
+-- CreateEnum
+CREATE TYPE "State" AS ENUM ('SETUP', 'LOCKED', 'RUNNING', 'DONE');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -13,7 +19,7 @@ CREATE TABLE "Player" (
     "name" TEXT NOT NULL,
     "color" TEXT NOT NULL DEFAULT 'red',
     "avatar" TEXT NOT NULL DEFAULT '/wolf_64.png',
-    "role" TEXT NOT NULL DEFAULT 'PLAYER',
+    "role" "Role" NOT NULL DEFAULT 'PLAYER',
 
     CONSTRAINT "Player_pkey" PRIMARY KEY ("roomCode","userSecret")
 );
@@ -35,6 +41,7 @@ CREATE TABLE "Tile" (
     "isComplete" BOOLEAN NOT NULL DEFAULT false,
     "roomCode" TEXT NOT NULL,
     "userSecret" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Tile_pkey" PRIMARY KEY ("id")
 );
@@ -43,7 +50,7 @@ CREATE TABLE "Tile" (
 CREATE TABLE "Room" (
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "state" TEXT NOT NULL DEFAULT 'SETUP',
+    "state" "State" NOT NULL DEFAULT 'SETUP',
 
     CONSTRAINT "Room_pkey" PRIMARY KEY ("code")
 );
@@ -61,10 +68,11 @@ ALTER TABLE "Player" ADD CONSTRAINT "Player_roomCode_fkey" FOREIGN KEY ("roomCod
 ALTER TABLE "Player" ADD CONSTRAINT "Player_userSecret_fkey" FOREIGN KEY ("userSecret") REFERENCES "User"("secret") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BoardTile" ADD CONSTRAINT "BoardTile_tileId_fkey" FOREIGN KEY ("tileId") REFERENCES "Tile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "BoardTile" ADD CONSTRAINT "BoardTile_playerRoomCode_playerUserSecret_fkey" FOREIGN KEY ("playerRoomCode", "playerUserSecret") REFERENCES "Player"("roomCode", "userSecret") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "BoardTile" ADD CONSTRAINT "BoardTile_tileId_fkey" FOREIGN KEY ("tileId") REFERENCES "Tile"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Tile" ADD CONSTRAINT "Tile_roomCode_userSecret_fkey" FOREIGN KEY ("roomCode", "userSecret") REFERENCES "Player"("roomCode", "userSecret") ON DELETE RESTRICT ON UPDATE CASCADE;
+

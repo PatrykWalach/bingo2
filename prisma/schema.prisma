@@ -1,9 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["extendedWhereUnique"]
 }
 
 datasource db {
@@ -14,12 +10,84 @@ datasource db {
 }
 
 model User {
-  id    String   @id @default(uuid())
-  plays Player[]
-
-  secret String @unique
+  id     String   @id @default(uuid())
+  secret String   @unique
+  plays  Player[]
 }
 
+model Player {
+  roomCode     String
+  userSecret   String
+  name         String
+  color        String      @default("red")
+  avatar       String      @default("/wolf_64.png")
+  role         Role        @default(PLAYER)
+  board        BoardTile[]
+  room         Bingo       @relation(fields: [roomCode], references: [code])
+  user         User        @relation(fields: [userSecret], references: [secret])
+  createdTiles Tile[]
+
+  @@id([roomCode, userSecret])
+}
+
+model Row {
+  id    String           @id @default(uuid())
+  tiles BoardTileToRow[]
+
+  @@map("BoardRow")
+}
+
+model BoardTileToRow {
+  tile        BoardTile @relation(fields: [boardTileId], references: [id])
+  row         Row       @relation(fields: [rowId], references: [id])
+  boardTileId String
+  rowId       String
+
+  @@unique([rowId, boardTileId])
+  @@map("_BoardTileToRow")
+}
+
+model BoardTile {
+  id         String           @id @default(uuid())
+  tileId     String
+  roomCode   String           @map("playerRoomCode")
+  userSecret String           @map("playerUserSecret")
+  player     Player           @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
+  tile       Tile             @relation(fields: [tileId], references: [id])
+  rows       BoardTileToRow[]
+  index      Int              @default(autoincrement())
+
+  @@unique([roomCode, userSecret, index])
+  @@unique([roomCode, userSecret, tileId]) // no duplicate tiles for user
+}
+
+model Tile {
+  id         String      @id @default(uuid())
+  content    String
+  isComplete Boolean     @default(false)
+  roomCode   String
+  userSecret String
+  createdAt  DateTime    @default(now())
+  boards     BoardTile[]
+  author     Player      @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
+}
+
+enum WinCondition {
+  FIRST_ROW
+  ALL_ROWS
+}
+
+model Bingo {
+  code               String       @id
+  name               String
+  state              State        @default(SETUP)
+  players            Player[]
+  isWithFreeTile     Boolean      @default(false)
+  isWithHiddenBoards Boolean      @default(false)
+  winCodition        WinCondition @default(FIRST_ROW)
+
+  @@map("Room")
+}
 
 enum Role {
   GAME_MASTER
@@ -31,49 +99,4 @@ enum State {
   LOCKED
   RUNNING
   DONE
-}
-
-model Player {
-  room         Bingo       @relation(references: [code], fields: [roomCode])
-  roomCode     String
-  user         User        @relation(references: [secret], fields: [userSecret])
-  userSecret   String
-  name         String
-  color        String      @default("red")
-  avatar       String      @default("/wolf_64.png")
-  role         Role        @default(PLAYER)
-  board        BoardTile[]
-  createdTiles Tile[]
-
-  @@id([roomCode, userSecret])
-}
-
-model BoardTile {
-  tile             Tile   @relation(fields: [tileId], references: [id])
-  id               Int    @id @default(autoincrement())
-  player           Player @relation(fields: [playerRoomCode, playerUserSecret], references: [roomCode, userSecret])
-  tileId           String
-  playerRoomCode   String
-  playerUserSecret String
-
-  @@unique([playerRoomCode, playerUserSecret, tileId]) // no duplicate tiles for user
-}
-
-model Tile {
-  id         String      @id @default(uuid())
-  content    String
-  isComplete Boolean     @default(false)
-  boards     BoardTile[]
-  author     Player      @relation(fields: [roomCode, userSecret], references: [roomCode, userSecret])
-  roomCode   String
-  userSecret String
-}
-
-model Bingo {
-  code    String   @id
-  name    String
-  state   State    @default(SETUP)
-  players Player[]
-  
-  @@map("Room")
 }

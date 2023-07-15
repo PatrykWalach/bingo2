@@ -7,7 +7,7 @@
 	export let data: PageData
 
 	const join = superForm(data.form, {})
-	const { errors: joinErrors, formId: joinId, form } = join
+	const { errors: joinErrors, formId: joinId, form, delayed } = join
 </script>
 
 <svelte:head>
@@ -33,11 +33,11 @@
 						<fieldset class="form-control">
 							<legend class="label"><span class="label-text">Avatar</span></legend>
 
-							<ul class="flex flex-wrap gap-2">
+							<ul class="flex flex-wrap gap-1">
 								{#each data.avatars as avatar}
 									<li>
-										<label class="btn-active btn-circle btn" data-testid="avatar-label">
-											<div class="avatar">
+										<label class="btn btn-circle btn-active" data-testid="avatar-label">
+											<div class="avatar m-2">
 												<input
 													type="radio"
 													name="avatar"
@@ -63,7 +63,11 @@
 						<TextField form={join} field="name">Name</TextField>
 
 						<div class="form-control mt-6">
-							<button type="submit" class="btn-primary btn">Join</button>
+							<button type="submit" class="btn btn-primary cursor-default">
+								{#if $delayed}
+									<span class="loading loading-spinner" />
+								{/if}Join
+							</button>
 						</div>
 					</fieldset>
 				</form>

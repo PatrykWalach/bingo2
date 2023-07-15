@@ -11,3 +11,4 @@ vite.config.ts.timestamp-*
 .turbo
 playwright-report
 .vercel
+test-results

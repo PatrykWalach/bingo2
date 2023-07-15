@@ -13,7 +13,7 @@ const joinRoomSchema = z.object({
 	socketId: z.string().optional()
 })
 
-export const load: ServerLoad = (event) => {
+export const load: ServerLoad = () => {
 	return {
 		avatars,
 		form: superValidate(createPlayer(), joinRoomSchema)

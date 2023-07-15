@@ -3,25 +3,21 @@ import type { ServerLoad } from '@sveltejs/kit'
 
 export const load: ServerLoad = (event) => {
 	return {
-		Viewer: event.locals.db.player.findUniqueOrThrow({
+		BoardQuery: event.locals.db.boardTile.findMany({
 			where: {
-				roomCode_userSecret: {
-					roomCode: String(event.params.code),
-					userSecret: String(event.cookies.get(TOKEN))
+				roomCode: String(event.params.code),
+				userSecret: String(event.cookies.get(TOKEN)),
+				player: {
+					room: { isWithHiddenBoards: false }
 				}
 			},
-
+			orderBy: {
+				index: 'asc'
+			},
 			select: {
-				board: {
-					select: {
-						id: true,
-						tile: {
-							select: {
-								content: true,
-								isComplete: true
-							}
-						}
-					}
+				id: true,
+				tile: {
+					select: { isComplete: true, content: true }
 				}
 			}
 		})

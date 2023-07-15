@@ -18,7 +18,7 @@
 
 <input
 	bind:value={$value}
-	class="input-bordered input"
+	class="input input-bordered"
 	type="text"
 	aria-invalid={$errors ? 'true' : undefined}
 	name={field}

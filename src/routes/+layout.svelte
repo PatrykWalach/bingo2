@@ -6,15 +6,20 @@
 	import { page } from '$app/stores'
 	import { onDestroy, onMount } from 'svelte'
 	import { derived } from 'svelte/store'
+	import type { LayoutData } from './$types'
 
 	let unsubscriber = (): void => undefined
 
-	onMount(async () => {
-		const { pusher } = await import('$lib/socket.client')
 
+	
+const pathname = derived(page, ($page) => $page.url.pathname)
+
+onMount(async () => {
+	const { pusher } = await import('$lib/socket.client')
+	
 		let clean = (): void => undefined
 
-		unsubscriber = derived(page, ($page) => $page.url.pathname).subscribe(
+		unsubscriber = pathname.subscribe(
 			(pathname) => {
 				const channel = pusher.subscribe(pathname.replaceAll('/', '-'))
 
@@ -36,10 +41,30 @@
 	})
 
 	onDestroy(() => unsubscriber())
+
+	export let data: LayoutData
 </script>
 
-<slot />
-<!-- <div class="">
-	<div class="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+<div class="drawer lg:drawer-open">
+	<input id="drawer-input" type="checkbox" class="drawer-toggle" />
+	<div class="drawer-content">
+		<slot />
+
+		<label
+			for="drawer-input"
+			class="btn btn-primary drawer-button fixed bottom-4 right-4 cursor-default lg:hidden"
+		>
+			Open drawer
+		</label>
 	</div>
-</div> -->
+	<div class="drawer-side">
+		<label for="drawer-input" class="drawer-overlay" />
+		<ul class="menu h-full w-80 bg-base-200 p-4 text-base-content">
+			{#each data.RootLayout as room (room.code)}
+				<li><a href="/room/{room.code}">{room.name}</a></li>
+			{:else}
+				<li>No rooms yet, join some</li>
+			{/each}
+		</ul>
+	</div>
+</div>
