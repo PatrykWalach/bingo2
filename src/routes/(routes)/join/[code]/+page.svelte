@@ -36,7 +36,7 @@
 							<ul class="flex flex-wrap gap-1">
 								{#each data.avatars as avatar}
 									<li>
-										<label class="btn-active btn-circle btn" data-testid="avatar-label">
+										<label class="btn btn-circle btn-active" data-testid="avatar-label">
 											<div class="avatar m-2">
 												<input
 													type="radio"
@@ -63,7 +63,7 @@
 						<TextField form={join} field="name">Name</TextField>
 
 						<div class="form-control mt-6">
-							<button type="submit" class="btn-primary btn cursor-default">
+							<button type="submit" class="btn btn-primary cursor-default">
 								{#if $delayed}
 									<span class="loading loading-spinner" />
 								{/if}Join

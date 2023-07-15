@@ -8,8 +8,8 @@
 			<h1 class="card-title inline font-black text-9xl">{$page.status}</h1>
 			<p>{$page.error?.message}</p>
 			<div class="card-actions">
-				<a href="/" class="btn-neutral btn lg:btn-lg">go home</a>
-				<a href="/" class="btn-ghost btn lg:btn-lg">contact us</a>
+				<a href="/" class="btn btn-neutral lg:btn-lg">go home</a>
+				<a href="/" class="btn btn-ghost lg:btn-lg">contact us</a>
 			</div>
 		</div>
 	</div>

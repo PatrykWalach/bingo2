@@ -56,7 +56,7 @@
 
 		<noscript>
 			<div class="form-control mt-6">
-				<button type="submit" class="btn-primary btn">
+				<button type="submit" class="btn btn-primary">
 					{#if $delayed}
 						<span class="loading loading-spinner" />
 					{/if}save
