@@ -25,7 +25,7 @@
 						<span class="label-text">Code</span>
 					</label>
 					<input
-						class="input-primary input text-lg sm:input-lg sm:text-xl"
+						class="input input-primary text-lg sm:input-lg sm:text-xl"
 						id="code"
 						type="text"
 						readonly
@@ -36,7 +36,7 @@
 				<ul class="flex flex-col gap-1 py-4">
 					{#each players as player (player.user.id)}
 						<li class="">
-							<div class="dropdown-hover dropdown w-full">
+							<div class="dropdown dropdown-hover w-full">
 								<label tabindex="-1" class="w-full" for="">
 									<div class="flex w-full gap-1">
 										<div class="avatar m-2">
@@ -76,7 +76,7 @@
 										tabindex="-1"
 										class="{isRunning
 											? 'grid'
-											: 'hidden'} dropdown-content menu rounded-box z-[1] aspect-square w-52 grid-cols-5 grid-rows-5 items-stretch justify-items-stretch gap-1 bg-base-200 p-2 shadow"
+											: 'hidden'} menu dropdown-content rounded-box z-[1] aspect-square w-52 grid-cols-5 grid-rows-5 items-stretch justify-items-stretch gap-1 bg-base-200 p-2 shadow"
 									>
 										{#each player.board as tile (tile.id)}
 											<li
@@ -91,7 +91,7 @@
 				</ul>
 			</section>
 			<section class="flex flex-col gap-2 xl:col-span-2">
-				<nav class="tabs tabs-boxed grid grid-cols-3">
+				<nav class="tabs-boxed tabs grid grid-cols-3">
 					<a
 						data-sveltekit-replacestate
 						href="/room/{$page.params.code}"

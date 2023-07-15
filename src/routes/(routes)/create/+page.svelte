@@ -30,7 +30,7 @@
 							Name
 						</TextField>
 						<div class="form-control mt-6">
-							<button type="submit" class="btn-primary btn cursor-default">
+							<button type="submit" class="btn btn-primary cursor-default">
 								{#if $delayed}
 									<span class="loading loading-spinner" />
 								{/if}
