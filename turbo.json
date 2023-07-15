@@ -6,7 +6,7 @@
 		"HOST",
 		"POSTGRES_PRISMA_URL",
 		"POSTGRES_URL_NON_POOLING",
-		"VERCEL"
+		"PRISMA_GENERATE_DATAPROXY"
 	],
 	"pipeline": {
 		"build": {
@@ -38,8 +38,6 @@
 		"migrate": { "inputs": ["prisma/schema.prisma"], "cache": false },
 		"generate": {
 			"inputs": ["prisma/schema.prisma"],
-			"outputs": ["node_modules/@prisma/client/**"],
-			"env": ["PRISMA_GENERATE_DATAPROXY"],
 			"cache": false
 		},
 		"preview": {

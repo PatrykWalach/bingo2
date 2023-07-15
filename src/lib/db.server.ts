@@ -1,9 +1,15 @@
+import { PROXY_PRISMA_URL } from '$env/static/private'
 import { faker } from '@faker-js/faker/locale/en'
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client/edge'
 import type { Role } from './constants'
 
 export const client = new PrismaClient({
-	errorFormat: 'pretty'
+	errorFormat: 'pretty',
+	datasources: {
+		db: {
+			url: PROXY_PRISMA_URL
+		}
+	}
 })
 
 export type Client = typeof client

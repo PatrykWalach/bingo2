@@ -58,7 +58,7 @@ jobs:
       - name: Run E2E tests 🧪
         run: npm exec turbo test -- -- --project=${{ matrix.project }}
         env:
-          POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
+          PROXY_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
           POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
 
       - name: Upload test results
@@ -128,3 +128,5 @@ jobs:
 
       - name: Svelte Check
         run: npm exec turbo check
+        env:
+          PROXY_PRISMA_URL: ''
