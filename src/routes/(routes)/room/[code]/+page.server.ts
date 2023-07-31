@@ -1,6 +1,5 @@
 import { Role, State, TOKEN } from '$lib/constants'
 
-
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'

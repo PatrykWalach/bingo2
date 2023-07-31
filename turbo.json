@@ -1,10 +1,6 @@
 {
 	"$schema": "https://turbo.build/schema.json",
-	"globalEnv": [
-		"ORIGIN",
-		"PORT",
-		"HOST"
-	],
+	"globalEnv": ["ORIGIN", "PORT", "HOST"],
 	"pipeline": {
 		"build": {
 			"outputs": [".svelte-kit/**", ".vercel/**"],

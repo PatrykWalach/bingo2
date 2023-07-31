@@ -1,6 +1,5 @@
 import { TOKEN } from '$lib/constants'
 
-
 import { error, type ServerLoad } from '@sveltejs/kit'
 
 export const load: ServerLoad = (event) => {

@@ -1,7 +1,5 @@
 // See https://kit.svelte.dev/docs/types#app
 
-
-
 import type { VercelPgDatabase } from 'drizzle-orm/vercel-postgres'
 import type Pusher from 'pusher'
 
@@ -18,5 +16,4 @@ declare global {
 	}
 }
 
-export { }
-
+export {}
