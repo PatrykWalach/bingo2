@@ -1,8 +1,11 @@
 import { State, TOKEN } from '$lib/constants'
+import { player, room as rooms } from '$lib/schema.server'
 import { fail, redirect } from '@sveltejs/kit'
+import { eq } from 'drizzle-orm'
 import { setError, superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import type { Actions } from './$types'
+
 const joinRoomSchema = z.object({
 	code: z.string()
 })
@@ -23,29 +26,17 @@ export const actions: Actions = {
 
 		const secret = event.cookies.get(TOKEN) ?? crypto.randomUUID()
 
-		const room = await event.locals.db.bingo.findUnique({
-			where: {
-				code: form.data.code
-			},
-			select: {
-				_count: {
-					select: {
-						players: {
-							where: {
-								userSecret: secret
-							}
-						}
-					}
-				},
-				state: true
-			}
-		})
+		const [room] = await event.locals.db
+			.select({ state: rooms.state, player: player.userSecret })
+			.from(rooms)
+			.leftJoin(player, eq(player.userSecret, secret))
+			.where(eq(rooms.code, form.data.code))
 
 		if (!room) {
 			return setError(form, 'code', 'Room not found!')
 		}
 
-		if (room._count.players > 0) {
+		if (room.player) {
 			throw redirect(303, `/room/${form.data.code}`)
 		}
 

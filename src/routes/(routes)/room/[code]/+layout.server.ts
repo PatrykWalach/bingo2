@@ -1,5 +1,6 @@
 import { TOKEN } from '$lib/constants'
-import { Prisma } from '@prisma/client'
+
+
 import { error, type ServerLoad } from '@sveltejs/kit'
 
 export const load: ServerLoad = (event) => {

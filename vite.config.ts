@@ -11,12 +11,5 @@ export default defineConfig({
 	},
 	preview: {
 		port: 5173
-	},
-	resolve: {
-		alias: {
-			...(process.env.PRISMA_GENERATE_DATAPROXY
-				? undefined
-				: { '@prisma/client/edge': '@prisma/client' })
-		}
 	}
 })

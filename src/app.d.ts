@@ -1,7 +1,8 @@
 // See https://kit.svelte.dev/docs/types#app
 
-// import type { Client as PrismaClient } from './lib/db.server'
-import type { PrismaClient } from '@prisma/client/edge'
+
+
+import type { VercelPgDatabase } from 'drizzle-orm/vercel-postgres'
 import type Pusher from 'pusher'
 
 // for information about these interfaces
@@ -9,7 +10,7 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			db: PrismaClient
+			db: VercelPgDatabase<Record<string, never>>
 			pusher: Pusher
 		}
 		// interface PageData {}
@@ -17,4 +18,5 @@ declare global {
 	}
 }
 
-export {}
+export { }
+

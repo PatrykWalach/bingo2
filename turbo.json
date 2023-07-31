@@ -3,10 +3,7 @@
 	"globalEnv": [
 		"ORIGIN",
 		"PORT",
-		"HOST",
-		"POSTGRES_PRISMA_URL",
-		"POSTGRES_URL_NON_POOLING",
-		"PRISMA_GENERATE_DATAPROXY"
+		"HOST"
 	],
 	"pipeline": {
 		"build": {
@@ -17,8 +14,7 @@
 				"tailwind.config.ts",
 				"svelte.config.js",
 				"postcss.config.cjs"
-			],
-			"dependsOn": ["migrate"]
+			]
 		},
 		"lint": {},
 		"test": {
@@ -32,13 +28,12 @@
 		"sync": { "outputs": [".svelte-kit/**"] },
 		"dev": {
 			"cache": false,
-			"persistent": true,
-			"dependsOn": ["migrate"]
+			"persistent": true
 		},
-		"migrate": { "inputs": ["prisma/schema.prisma"], "cache": false },
+		"migrate": { "dependsOn": ["generate"] },
 		"generate": {
-			"inputs": ["prisma/schema.prisma"],
-			"cache": false
+			"inputs": ["src/lib/schema.server.ts"],
+			"outputs": ["drizzle/**"]
 		},
 		"preview": {
 			"cache": false,

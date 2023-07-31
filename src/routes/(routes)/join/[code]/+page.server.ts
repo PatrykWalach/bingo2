@@ -1,6 +1,7 @@
 import { Role, State, TOKEN } from '$lib/constants'
 import { avatars, createPlayer, createUser } from '$lib/db.server'
-import { Prisma } from '@prisma/client/edge'
+
+
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
 import { setError, superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'

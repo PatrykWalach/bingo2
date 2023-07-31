@@ -1,16 +1,11 @@
-import { PROXY_PRISMA_URL } from '$env/static/private'
 import { faker } from '@faker-js/faker/locale/en'
-import { Prisma, PrismaClient } from '@prisma/client/edge'
+
 import type { Role } from './constants'
 
-export const client = new PrismaClient({
-	errorFormat: 'pretty',
-	datasources: {
-		db: {
-			url: PROXY_PRISMA_URL
-		}
-	}
-})
+import { sql } from '@vercel/postgres'
+import { drizzle } from 'drizzle-orm/vercel-postgres'
+
+export const client = drizzle(sql)
 
 export type Client = typeof client
 
@@ -37,25 +32,28 @@ export function createPlayer() {
 	}
 }
 
-export function addPlayer(args: { secret: string; role: Role }) {
-	return Prisma.validator<Prisma.PlayerCreateNestedManyWithoutRoomInput>()({
-		create: {
-			role: args.role,
+export function addPlayer(args: { userSecret: string; role: Role; roomCode: string }) {
+	return client
+		.insert(player)
+		.values({
 			...createPlayer(),
-			user: createUser(args)
-		}
-	})
+			...args
+		})
+		.returning()
 }
 
-export function createUser(args: { secret: string }) {
-	return Prisma.validator<Prisma.UserCreateNestedOneWithoutPlaysInput>()({
-		connectOrCreate: {
-			where: {
-				secret: args.secret
-			},
-			create: {
-				secret: args.secret
-			}
-		}
+import { placeholder } from 'drizzle-orm'
+import { player, user } from './schema.server'
+
+const createUserStmt = client
+	.insert(user)
+	.values({
+		secret: placeholder('secret'),
+		id: crypto.randomUUID()
 	})
+	.returning()
+	.prepare('createUser')
+
+export function createUser(args: { secret: string }) {
+	return createUserStmt.execute(args)
 }
