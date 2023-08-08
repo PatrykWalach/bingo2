@@ -1,67 +1,50 @@
 import { TOKEN } from '$lib/constants'
+import { boardTile, player } from '$lib/schema.server'
 
-import { error, type ServerLoad } from '@sveltejs/kit'
+import type { ServerLoad } from '@sveltejs/kit'
+import { and, eq } from 'drizzle-orm'
 
 export const load: ServerLoad = (event) => {
 	return {
-		LayoutViewer: event.locals.db.player
-			.findUniqueOrThrow({
-				where: {
-					roomCode_userSecret: {
-						roomCode: String(event.params.code),
-						userSecret: String(event.cookies.get(TOKEN))
-					}
-				},
-				select: {
-					user: { select: { id: true } },
-					room: {
-						select: {
-							isWithHiddenBoards: true,
-							code: true,
-							name: true,
-							state: true,
-							players: {
-								select: {
-									color: true,
-									avatar: true,
-									role: true,
-									name: true,
-									board: {
-										orderBy: { index: 'asc' },
-										select: {
-											id: true,
-											tile: {
-												select: { isComplete: true }
-											}
+		LayoutViewer: event.locals.db.query.player.findFirst({
+			where: and(
+				eq(player.roomCode, String(event.params.code)),
+				eq(player.userSecret, String(event.cookies.get(TOKEN)))
+			),
+			with: {
+				user: { columns: { id: true } },
+				room: {
+					columns: {
+						isWithHiddenBoards: true,
+						code: true,
+						name: true,
+						state: true
+					},
+					with: {
+						players: {
+							columns: {
+								color: true,
+								avatar: true,
+								role: true,
+								name: true
+							},
+							with: {
+								board: {
+									orderBy: [boardTile.index],
+									with: {
+										tile: {
+											columns: { isComplete: true }
 										}
 									},
-									_count: {
-										select: {
-											board: {
-												where: {
-													tile: {
-														isComplete: true
-													}
-												}
-											}
-										}
-									},
-									user: {
-										select: {
-											id: true
-										}
+									columns: {
+										id: true
 									}
 								}
 							}
 						}
 					}
 				}
-			})
-			.catch((e) => {
-				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-					throw error(404, 'Sounds like skill issue!')
-				}
-				throw e
-			})
+			}
+		})
 	}
 }

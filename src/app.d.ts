@@ -1,6 +1,6 @@
 // See https://kit.svelte.dev/docs/types#app
 
-import type { VercelPgDatabase } from 'drizzle-orm/vercel-postgres'
+import type { Client } from '$lib/db.server'
 import type Pusher from 'pusher'
 
 // for information about these interfaces
@@ -8,7 +8,7 @@ declare global {
 	namespace App {
 		// interface Error {}
 		interface Locals {
-			db: VercelPgDatabase<Record<string, never>>
+			db: Client
 			pusher: Pusher
 		}
 		// interface PageData {}
@@ -16,4 +16,5 @@ declare global {
 	}
 }
 
-export {}
+export { }
+

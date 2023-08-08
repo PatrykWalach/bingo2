@@ -26,17 +26,21 @@ export const actions: Actions = {
 
 		const secret = event.cookies.get(TOKEN) ?? crypto.randomUUID()
 
-		const [room] = await event.locals.db
-			.select({ state: rooms.state, player: player.userSecret })
-			.from(rooms)
-			.leftJoin(player, eq(player.userSecret, secret))
-			.where(eq(rooms.code, form.data.code))
+		const room = await event.locals.db.query.room.findFirst({
+			where: eq(rooms.code, form.data.code),
+			columns: { state: true },
+			with: {
+				players: {
+					where: eq(player.userSecret, secret)
+				}
+			}
+		})
 
 		if (!room) {
 			return setError(form, 'code', 'Room not found!')
 		}
 
-		if (room.player) {
+		if (room.players.length > 0) {
 			throw redirect(303, `/room/${form.data.code}`)
 		}
 

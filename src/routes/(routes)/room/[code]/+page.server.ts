@@ -1,6 +1,8 @@
 import { Role, State, TOKEN } from '$lib/constants'
 
+import { player, tile } from '$lib/schema.server'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
+import { and, eq } from 'drizzle-orm'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import type { Actions, RequestEvent } from './$types'
@@ -40,64 +42,59 @@ export const load: ServerLoad = (event) => {
 		unlockRoom: superValidate(unlockRoom, { id: 'unlockRoom' }),
 		startRoom: superValidate(startRoom, { id: 'startRoom' }),
 
-		Tiles: event.locals.db.tile.findMany({
-			where: {
-				roomCode: String(event.params.code)
-			},
-			orderBy: { createdAt: 'asc' },
-			select: {
+		Tiles: event.locals.db.query.tile.findMany({
+			where: eq(tile.roomCode, String(event.params.code)),
+			columns: {
 				content: true,
 				id: true,
-				isComplete: true,
+				isComplete: true
+			},
+			orderBy: tile.createdAt,
+			with: {
 				author: {
-					select: {
-						avatar: true,
-						name: true,
+					columns: {
+						name: true
+					},
+					with: {
 						user: {
-							select: {
-								id: true
-							}
+							columns: { id: true }
 						}
 					}
 				}
 			}
 		}),
-		Viewer: event.locals.db.player
-			.findUniqueOrThrow({
-				where: {
-					roomCode_userSecret: {
-						roomCode: String(event.params.code),
-						userSecret: String(event.cookies.get(TOKEN))
-					}
-				},
 
-				select: {
-					role: true,
-					user: { select: { id: true } },
-					room: {
-						select: {
-							players: {
-								select: {
-									color: true,
-									avatar: true,
-									name: true,
-									user: {
-										select: {
-											id: true
-										}
+		Viewer: event.locals.db.query.player.findFirst({
+			where: and(
+				eq(player.roomCode, String(event.params.code)),
+				eq(player.userSecret, String(event.cookies.get(TOKEN)))
+			),
+
+			columns: {
+				role: true
+			},
+			with: {
+				user: { columns: { id: true } },
+				room: {
+					with: {
+						players: {
+							columns: {
+								color: true,
+								avatar: true,
+								name: true
+							},
+							with: {
+								user: {
+									columns: {
+										id: true
 									}
 								}
 							}
 						}
 					}
 				}
-			})
-			.catch((e) => {
-				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-					throw error(404, 'Sounds like skill issue!')
-				}
-				throw e
-			})
+			}
+		})
 	}
 }
 
