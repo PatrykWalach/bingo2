@@ -1,5 +1,5 @@
-import { relations } from "drizzle-orm"
-import { boardTile, player, room, tile, user } from "./schema.server"
+import { relations } from 'drizzle-orm'
+import { boardTile, player, room, tile, user } from './schema.server'
 
 export * from './schema.server'
 
