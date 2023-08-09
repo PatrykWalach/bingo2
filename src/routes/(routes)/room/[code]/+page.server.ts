@@ -1,8 +1,9 @@
-import { Role, State, TOKEN } from '$lib/constants'
+import { Role, State, TOKEN, WinCondition } from '$lib/constants'
 
-import { player, tile } from '$lib/schema.server'
+import { isGameMaster, throwIfNotFound } from '$lib/notFound'
+import { boardTile, boardTileToRow, player, room, tile } from '$lib/schema.server'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, exists, inArray, ne, or, sql } from 'drizzle-orm'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import type { Actions, RequestEvent } from './$types'
@@ -42,59 +43,63 @@ export const load: ServerLoad = (event) => {
 		unlockRoom: superValidate(unlockRoom, { id: 'unlockRoom' }),
 		startRoom: superValidate(startRoom, { id: 'startRoom' }),
 
-		Tiles: event.locals.db.query.tile.findMany({
-			where: eq(tile.roomCode, String(event.params.code)),
-			columns: {
-				content: true,
-				id: true,
-				isComplete: true
-			},
-			orderBy: tile.createdAt,
-			with: {
-				author: {
-					columns: {
-						name: true
-					},
-					with: {
-						user: {
-							columns: { id: true }
+		Tiles: event.locals.db.query.tile
+			.findMany({
+				where: eq(tile.roomCode, String(event.params.code)),
+				columns: {
+					content: true,
+					id: true,
+					isComplete: true
+				},
+				orderBy: tile.createdAt,
+				with: {
+					author: {
+						columns: {
+							name: true
+						},
+						with: {
+							user: {
+								columns: { id: true }
+							}
 						}
 					}
 				}
-			}
-		}),
+			})
+			.then(throwIfNotFound),
 
-		Viewer: event.locals.db.query.player.findFirst({
-			where: and(
-				eq(player.roomCode, String(event.params.code)),
-				eq(player.userSecret, String(event.cookies.get(TOKEN)))
-			),
+		Viewer: event.locals.db.query.player
+			.findFirst({
+				where: and(
+					eq(player.roomCode, String(event.params.code)),
+					eq(player.userSecret, String(event.cookies.get(TOKEN)))
+				),
 
-			columns: {
-				role: true
-			},
-			with: {
-				user: { columns: { id: true } },
-				room: {
-					with: {
-						players: {
-							columns: {
-								color: true,
-								avatar: true,
-								name: true
-							},
-							with: {
-								user: {
-									columns: {
-										id: true
+				columns: {
+					role: true
+				},
+				with: {
+					user: { columns: { id: true } },
+					room: {
+						with: {
+							players: {
+								columns: {
+									color: true,
+									avatar: true,
+									name: true
+								},
+								with: {
+									user: {
+										columns: {
+											id: true
+										}
 									}
 								}
 							}
 						}
 					}
 				}
-			}
-		})
+			})
+			.then(throwIfNotFound)
 	}
 }
 
@@ -109,26 +114,33 @@ export const actions: Actions = {
 		const secret = getSecretOrThrow(event)
 
 		try {
-			await event.locals.db.tile.create({
-				data: {
-					author: {
-						connect: {
-							roomCode_userSecret: {
-								userSecret: secret,
-								roomCode: event.params.code
-							},
-							room: {
-								state: State.SETUP,
-								players: {
-									some: {
-										userSecret: secret
-									}
-								}
+			await event.locals.db.transaction(async (tx) => {
+				const player = await tx.query.player.findFirst({
+					where: (player) =>
+						and(eq(player.userSecret, secret), eq(player.roomCode, event.params.code)),
+					columns: {
+						roomCode: true,
+						userSecret: true
+					},
+					with: {
+						room: {
+							columns: {
+								state: true
 							}
 						}
-					},
-					content: form.data.content
+					}
+				})
+
+				if (player?.room.state !== State.SETUP) {
+					throw error(400)
 				}
+
+				await tx.insert(tile).values({
+					content: form.data.content,
+					id: crypto.randomUUID(),
+					roomCode: player.roomCode,
+					userSecret: player.userSecret
+				})
 			})
 		} catch (e) {
 			console.error(e)
@@ -149,37 +161,28 @@ export const actions: Actions = {
 		const secret = getSecretOrThrow(event)
 
 		try {
-			await event.locals.db.tile.delete({
-				where: {
-					id: form.data.id,
-					author: {
-						room: {
-							state: {
-								in: [State.SETUP, State.LOCKED]
-							}
-						}
-					},
-					OR: [
-						{
-							author: {
-								room: {
-									players: {
-										some: {
-											role: Role.GAME_MASTER,
-											userSecret: secret
-										}
-									}
-								}
-							}
-						},
-						{
-							author: {
-								userSecret: secret
-							}
-						}
-					]
-				}
-			})
+			const isStateIn = (states: State[]) =>
+				exists(
+					event.locals.db
+						.select()
+						.from(room)
+						.where(and(eq(room.code, tile.roomCode), inArray(room.state, states)))
+				)
+
+			const isAuthor = eq(tile.userSecret, secret)
+
+			await event.locals.db
+				.delete(tile)
+				.where(
+					and(
+						eq(tile.id, form.data.id),
+						isStateIn([State.SETUP, State.LOCKED]),
+						or(
+							isGameMaster(event.locals.db, { userSecret: secret, roomCode: tile.roomCode }),
+							isAuthor
+						)
+					)
+				)
 		} catch (e) {
 			console.error(e)
 			throw e
@@ -199,110 +202,92 @@ export const actions: Actions = {
 		const secret = getSecretOrThrow(event)
 
 		try {
-			await event.locals.db.$transaction(async (transaction) => {
-				const { isComplete, roomCode } = await transaction.tile.update({
-					data: {
+			await event.locals.db.transaction(async (tx) => {
+				const isNotDone = exists(
+					event.locals.db
+						.select()
+						.from(room)
+						.where(and(eq(room.code, tile.roomCode), ne(room.state, State.DONE)))
+				)
+
+				const isAuthor = eq(tile.userSecret, secret)
+
+				const [{ isComplete, roomCode }] = await event.locals.db
+					.update(tile)
+					.set({
 						isComplete: !form.data.isComplete
-					},
-					where: {
-						id: form.data.id,
-						author: {
-							room: {
-								state: {
-									not: State.DONE
-								}
-							}
-						},
-						OR: [
-							{
-								author: {
-									room: {
-										players: {
-											some: {
-												role: Role.GAME_MASTER,
-												userSecret: secret
-											}
-										}
-									}
-								}
-							},
-							{
-								author: {
-									userSecret: secret
-								}
-							}
-						]
-					}
-				})
+					})
+					.where(
+						and(
+							eq(tile.id, form.data.id),
+							isNotDone,
+							or(
+								isGameMaster(event.locals.db, { userSecret: secret, roomCode: tile.roomCode }),
+								isAuthor
+							)
+						)
+					)
+					.returning({ isComplete: tile.isComplete, roomCode: tile.roomCode })
 
 				if (!isComplete) {
 					return
 				}
 
 				try {
-					await transaction.bingo.update({
-						data: { state: State.DONE },
-						where: {
-							state: State.RUNNING,
-							code: roomCode,
-							winCodition: WinCondition.FIRST_ROW,
-							players: {
-								some: {
-									board: {
-										some: {
-											rows: {
-												some: {
-													row: {
-														tiles: {
-															every: {
-																tile: {
-																	tile: { isComplete: true }
-																}
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					})
+					await tx
+						.update(room)
+						.set({ state: State.DONE })
+						.where(
+							and(
+								eq(room.state, State.RUNNING),
+								eq(room.code, roomCode),
+								eq(room.winCodition, WinCondition.FIRST_ROW),
+								exists(
+									tx
+										.select()
+										.from(boardTileToRow)
+										.innerJoin(boardTile, eq(boardTile.id, boardTileToRow.boardTileId))
+										.innerJoin(tile, eq(tile.id, boardTile.tileId))
+										.where(eq(tile.roomCode, roomCode))
+										.groupBy(boardTileToRow.rowId)
+										.having(sql<boolean>`bool_and(${tile.isComplete}) is true`)
+								)
+							)
+						)
 				} catch (e) {
-					if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-						return
-					}
 					console.error(e)
-					throw e
 				}
 
 				try {
-					await transaction.bingo.update({
-						data: { state: State.DONE },
-						where: {
-							state: State.RUNNING,
-							code: roomCode,
-							winCodition: WinCondition.ALL_ROWS,
-							players: {
-								some: {
-									board: {
-										every: {
-											tile: {
-												isComplete: true
-											}
-										}
-									}
-								}
-							}
-						}
-					})
+					await tx
+						.update(room)
+						.set({ state: State.DONE })
+						.where(
+							and(
+								eq(room.state, State.RUNNING),
+								eq(room.code, roomCode),
+								eq(room.winCodition, WinCondition.ALL_ROWS),
+								exists(
+									tx
+										.select()
+										.from(player)
+										.innerJoin(
+											boardTile,
+											and(
+												eq(boardTile.playerRoomCode, player.roomCode),
+												eq(boardTile.playerUserSecret, player.userSecret)
+											)
+										)
+										.innerJoin(tile, eq(tile.id, boardTile.tileId))
+										.where(eq(tile.roomCode, roomCode))
+										.groupBy(player.userSecret)
+										.having(sql<boolean>`bool_and(${tile.isComplete}) is true`)
+								)
+							)
+						)
 				} catch (e) {
-					if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-						return
-					}
 					console.error(e)
-					throw e
+	 
 				}
 			})
 		} catch (e) {

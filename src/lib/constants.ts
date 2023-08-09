@@ -11,3 +11,8 @@ export enum State {
 	RUNNING = 'RUNNING',
 	DONE = 'DONE'
 }
+
+export enum WinCondition {
+	ALL_ROWS = 'ALL_ROWS',
+	FIRST_ROW = 'FIRST_ROW'
+}
