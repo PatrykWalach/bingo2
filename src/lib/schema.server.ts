@@ -54,7 +54,7 @@ export const boardTile = pgTable(
 )
 
 export const user = pgTable('User', {
- 		id: uuid('id').primaryKey().notNull().defaultRandom(),
+	id: uuid('id').primaryKey().notNull().defaultRandom(),
 	secret: text('secret').notNull()
 })
 
@@ -81,7 +81,7 @@ export const tile = pgTable(
 )
 
 export const boardRow = pgTable('BoardRow', {
-	id: uuid('id').primaryKey().notNull().defaultRandom(),
+	id: uuid('id').primaryKey().notNull().defaultRandom()
 })
 
 export const boardTileToRow = pgTable(
@@ -103,9 +103,6 @@ export const boardTileToRow = pgTable(
 		}
 	}
 )
-
-
-
 
 export const player = pgTable(
 	'Player',
