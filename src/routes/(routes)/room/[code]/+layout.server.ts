@@ -13,9 +13,7 @@ export const load: ServerLoad = (event) => {
 					eq(player.roomCode, String(event.params.code)),
 					eq(player.userSecret, String(event.cookies.get(TOKEN)))
 				),
-				columns: {
-
-				},
+				columns: {},
 				with: {
 					user: { columns: { id: true } },
 					room: {

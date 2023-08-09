@@ -14,7 +14,13 @@ export function throwIfNotFound<T>(value: T) {
 
 export function isGameMaster(
 	client: Client,
-	{ userSecret, roomCode }: { userSecret: GetColumnData<typeof player.userSecret, 'raw'> | SQLWrapper; roomCode: GetColumnData<typeof player.roomCode, 'raw'> | SQLWrapper;}
+	{
+		userSecret,
+		roomCode
+	}: {
+		userSecret: GetColumnData<typeof player.userSecret, 'raw'> | SQLWrapper
+		roomCode: GetColumnData<typeof player.roomCode, 'raw'> | SQLWrapper
+	}
 ) {
 	return exists(
 		client

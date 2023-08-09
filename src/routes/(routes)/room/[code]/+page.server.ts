@@ -287,7 +287,6 @@ export const actions: Actions = {
 						)
 				} catch (e) {
 					console.error(e)
-	 
 				}
 			})
 		} catch (e) {
