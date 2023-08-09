@@ -11,6 +11,10 @@ export const boardTileRelations = relations(boardTile, ({ one }) => ({
 	tile: one(tile, {
 		fields: [boardTile.tileId],
 		references: [tile.id]
+	}),
+	player: one(player, {
+		fields: [boardTile.playerRoomCode, boardTile.playerUserSecret],
+		references: [player.roomCode, player.userSecret]
 	})
 }))
 export const tileRelations = relations(tile, ({ one, many }) => ({
