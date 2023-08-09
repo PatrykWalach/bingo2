@@ -1,12 +1,15 @@
 import { faker } from '@faker-js/faker/locale/en'
 
-import type { Role } from './constants'
-
-import { sql } from '@vercel/postgres'
+import { createPool } from '@vercel/postgres'
 import { drizzle } from 'drizzle-orm/vercel-postgres'
 import * as schema from './relations.server'
 
-export const client = drizzle(sql, { schema })
+export const client = drizzle(
+	createPool({
+		connectionString: POSTGRES_URL
+	}),
+	{ schema, logger: true }
+)
 
 export type Client = typeof client
 
@@ -33,28 +36,5 @@ export function createPlayer() {
 	}
 }
 
-export function addPlayer(args: { userSecret: string; role: Role; roomCode: string }) {
-	return client
-		.insert(player)
-		.values({
-			...createPlayer(),
-			...args
-		})
-		.returning()
-}
+import { POSTGRES_URL } from '$env/static/private'
 
-import { placeholder } from 'drizzle-orm'
-import { player, user } from './schema.server'
-
-const createUserStmt = client
-	.insert(user)
-	.values({
-		secret: placeholder('secret'),
-		id: crypto.randomUUID()
-	})
-	.returning()
-	.prepare('createUser')
-
-export function createUser(args: { secret: string }) {
-	return createUserStmt.execute(args)
-}

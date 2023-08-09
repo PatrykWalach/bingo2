@@ -1,22 +1,19 @@
 import {
-	pgTable,
-	pgEnum,
-	pgSchema,
-	AnyPgColumn,
-	text,
 	boolean,
-	uniqueIndex,
 	foreignKey,
+	pgEnum,
+	pgTable,
+	primaryKey,
 	serial,
+	text,
 	timestamp,
-	primaryKey
+	uniqueIndex,
+	uuid
 } from 'drizzle-orm/pg-core'
 
 export const winCondition = pgEnum('WinCondition', ['FIRST_ROW', 'ALL_ROWS'])
 export const role = pgEnum('Role', ['GAME_MASTER', 'PLAYER'])
 export const state = pgEnum('State', ['SETUP', 'LOCKED', 'RUNNING', 'DONE'])
-
-import { sql } from 'drizzle-orm'
 
 export const room = pgTable('Room', {
 	code: text('code').primaryKey().notNull(),
@@ -30,7 +27,7 @@ export const room = pgTable('Room', {
 export const boardTile = pgTable(
 	'BoardTile',
 	{
-		id: text('id').primaryKey().notNull(),
+		id: uuid('id').primaryKey().notNull().defaultRandom(),
 		tileId: text('tileId')
 			.notNull()
 			.references(() => tile.id, { onDelete: 'restrict', onUpdate: 'cascade' }),
@@ -57,14 +54,14 @@ export const boardTile = pgTable(
 )
 
 export const user = pgTable('User', {
-	id: text('id').primaryKey().notNull(),
+ 		id: uuid('id').primaryKey().notNull().defaultRandom(),
 	secret: text('secret').notNull()
 })
 
 export const tile = pgTable(
 	'Tile',
 	{
-		id: text('id').primaryKey().notNull(),
+		id: uuid('id').primaryKey().notNull().defaultRandom(),
 		content: text('content').notNull(),
 		isComplete: boolean('isComplete').default(false).notNull(),
 		roomCode: text('roomCode').notNull(),
@@ -84,7 +81,7 @@ export const tile = pgTable(
 )
 
 export const boardRow = pgTable('BoardRow', {
-	id: text('id').primaryKey().notNull()
+	id: uuid('id').primaryKey().notNull().defaultRandom(),
 })
 
 export const boardTileToRow = pgTable(
@@ -106,6 +103,9 @@ export const boardTileToRow = pgTable(
 		}
 	}
 )
+
+
+
 
 export const player = pgTable(
 	'Player',
