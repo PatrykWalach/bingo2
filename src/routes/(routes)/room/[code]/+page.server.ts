@@ -255,7 +255,7 @@ export const actions: Actions = {
 							)
 						)
 				} catch (e) {
-					console.error(e)
+					throw e
 				}
 
 				try {
@@ -286,7 +286,7 @@ export const actions: Actions = {
 							)
 						)
 				} catch (e) {
-					console.error(e)
+					throw e
 				}
 			})
 		} catch (e) {
