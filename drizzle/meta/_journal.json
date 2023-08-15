@@ -1,20 +1,27 @@
 {
-	"version": "5",
-	"dialect": "pg",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "5",
-			"when": 1690816538667,
-			"tag": "0000_certain_manta",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "5",
-			"when": 1690817507327,
-			"tag": "0001_big_mandroid",
-			"breakpoints": true
-		}
-	]
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1690816538667,
+      "tag": "0000_certain_manta",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1690817507327,
+      "tag": "0001_big_mandroid",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1692109196601,
+      "tag": "0002_mixed_stellaris",
+      "breakpoints": true
+    }
+  ]
 }
