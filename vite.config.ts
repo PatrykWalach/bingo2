@@ -6,8 +6,8 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
 		strictPort: true,
-		fs:{
-			allow:['./.yarn']
+		fs: {
+			allow: ['./.yarn']
 		}
 	},
 	preview: {
