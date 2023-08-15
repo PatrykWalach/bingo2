@@ -52,7 +52,7 @@ jobs:
           postgresql db: devdb
 
       - name: Run E2E tests 🧪
-        run: yarn dlx turbo test -- -- --project=${{ matrix.project }}
+        run: yarn dlx turbo test -- --project=${{ matrix.project }}
 
       - name: Upload test results
         if: always()
