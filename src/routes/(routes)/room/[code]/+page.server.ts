@@ -113,35 +113,34 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		
-			await event.locals.db.transaction(async (tx) => {
-				const player = await tx.query.player.findFirst({
-					where: (player) =>
-						and(eq(player.userSecret, secret), eq(player.roomCode, event.params.code)),
-					columns: {
-						roomCode: true,
-						userSecret: true
-					},
-					with: {
-						room: {
-							columns: {
-								state: true
-							}
+		await event.locals.db.transaction(async (tx) => {
+			const player = await tx.query.player.findFirst({
+				where: (player) =>
+					and(eq(player.userSecret, secret), eq(player.roomCode, event.params.code)),
+				columns: {
+					roomCode: true,
+					userSecret: true
+				},
+				with: {
+					room: {
+						columns: {
+							state: true
 						}
 					}
-				})
-
-				if (player?.room.state !== State.SETUP) {
-					throw error(400)
 				}
-
-				await tx.insert(tile).values({
-					content: form.data.content,
-					id: crypto.randomUUID(),
-					roomCode: player.roomCode,
-					userSecret: player.userSecret
-				})
 			})
+
+			if (player?.room.state !== State.SETUP) {
+				throw error(400)
+			}
+
+			await tx.insert(tile).values({
+				content: form.data.content,
+				id: crypto.randomUUID(),
+				roomCode: player.roomCode,
+				userSecret: player.userSecret
+			})
+		})
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -156,32 +155,28 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-	
-		
-			const isStateIn = (states: State[]) =>
-				exists(
-					event.locals.db
-						.select()
-						.from(room)
-						.where(and(eq(room.code, tile.roomCode), inArray(room.state, states)))
-				)
+		const isStateIn = (states: State[]) =>
+			exists(
+				event.locals.db
+					.select()
+					.from(room)
+					.where(and(eq(room.code, tile.roomCode), inArray(room.state, states)))
+			)
 
-			const isAuthor = eq(tile.userSecret, secret)
+		const isAuthor = eq(tile.userSecret, secret)
 
-			await event.locals.db
-				.delete(tile)
-				.where(
-					and(
-						eq(tile.id, form.data.id),
-						isStateIn([State.SETUP, State.LOCKED]),
-						or(
-							isGameMaster(event.locals.db, { userSecret: secret, roomCode: tile.roomCode }),
-							isAuthor
-						)
+		await event.locals.db
+			.delete(tile)
+			.where(
+				and(
+					eq(tile.id, form.data.id),
+					isStateIn([State.SETUP, State.LOCKED]),
+					or(
+						isGameMaster(event.locals.db, { userSecret: secret, roomCode: tile.roomCode }),
+						isAuthor
 					)
 				)
-
-				
+			)
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -196,97 +191,85 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		
-		
-			await event.locals.db.transaction(async (tx) => {
-				const isNotDone = exists(
-					event.locals.db
-						.select()
-						.from(room)
-						.where(and(eq(room.code, tile.roomCode), ne(room.state, State.DONE)))
-				)
+		await event.locals.db.transaction(async (tx) => {
+			const isNotDone = exists(
+				event.locals.db
+					.select()
+					.from(room)
+					.where(and(eq(room.code, tile.roomCode), ne(room.state, State.DONE)))
+			)
 
-				const isAuthor = eq(tile.userSecret, secret)
+			const isAuthor = eq(tile.userSecret, secret)
 
-				const [{ isComplete, roomCode }] = await event.locals.db
-					.update(tile)
-					.set({
-						isComplete: !form.data.isComplete
-					})
-					.where(
-						and(
-							eq(tile.id, form.data.id),
-							isNotDone,
-							or(
-								isGameMaster(event.locals.db, { userSecret: secret, roomCode: tile.roomCode }),
-								isAuthor
-							)
+			const [{ isComplete, roomCode }] = await event.locals.db
+				.update(tile)
+				.set({
+					isComplete: !form.data.isComplete
+				})
+				.where(
+					and(
+						eq(tile.id, form.data.id),
+						isNotDone,
+						or(
+							isGameMaster(event.locals.db, { userSecret: secret, roomCode: tile.roomCode }),
+							isAuthor
 						)
 					)
-					.returning({ isComplete: tile.isComplete, roomCode: tile.roomCode })
+				)
+				.returning({ isComplete: tile.isComplete, roomCode: tile.roomCode })
 
-				if (!isComplete) {
-					return
-				}
+			if (!isComplete) {
+				return
+			}
 
-				
-				
-					await tx
-						.update(room)
-						.set({ state: State.DONE })
-						.where(
-							and(
-								eq(room.state, State.RUNNING),
-								eq(room.code, roomCode),
-								eq(room.winCodition, WinCondition.FIRST_ROW),
-								exists(
-									tx
-										.select()
-										.from(boardTileToRow)
-										.innerJoin(boardTile, eq(boardTile.id, boardTileToRow.boardTileId))
-										.innerJoin(tile, eq(tile.id, boardTile.tileId))
-										.where(eq(tile.roomCode, roomCode))
-										.groupBy(boardTileToRow.rowId)
-										.having(sql<boolean>`bool_and(${tile.isComplete}) is true`)
-								)
-							)
+			await tx
+				.update(room)
+				.set({ state: State.DONE })
+				.where(
+					and(
+						eq(room.state, State.RUNNING),
+						eq(room.code, roomCode),
+						eq(room.winCodition, WinCondition.FIRST_ROW),
+						exists(
+							tx
+								.select()
+								.from(boardTileToRow)
+								.innerJoin(boardTile, eq(boardTile.id, boardTileToRow.boardTileId))
+								.innerJoin(tile, eq(tile.id, boardTile.tileId))
+								.where(eq(tile.roomCode, roomCode))
+								.groupBy(boardTileToRow.rowId)
+								.having(sql<boolean>`bool_and(${tile.isComplete}) is true`)
 						)
+					)
+				)
 
-						
-
-			
-						
-					await tx
-						.update(room)
-						.set({ state: State.DONE })
-						.where(
-							and(
-								eq(room.state, State.RUNNING),
-								eq(room.code, roomCode),
-								eq(room.winCodition, WinCondition.ALL_ROWS),
-								exists(
-									tx
-										.select()
-										.from(player)
-										.innerJoin(
-											boardTile,
-											and(
-												eq(boardTile.playerRoomCode, player.roomCode),
-												eq(boardTile.playerUserSecret, player.userSecret)
-											)
-										)
-										.innerJoin(tile, eq(tile.id, boardTile.tileId))
-										.where(eq(tile.roomCode, roomCode))
-										.groupBy(player.userSecret)
-										.having(sql<boolean>`bool_and(${tile.isComplete}) is true`)
+			await tx
+				.update(room)
+				.set({ state: State.DONE })
+				.where(
+					and(
+						eq(room.state, State.RUNNING),
+						eq(room.code, roomCode),
+						eq(room.winCodition, WinCondition.ALL_ROWS),
+						exists(
+							tx
+								.select()
+								.from(player)
+								.innerJoin(
+									boardTile,
+									and(
+										eq(boardTile.playerRoomCode, player.roomCode),
+										eq(boardTile.playerUserSecret, player.userSecret)
+									)
 								)
-							)
+								.innerJoin(tile, eq(tile.id, boardTile.tileId))
+								.where(eq(tile.roomCode, roomCode))
+								.groupBy(player.userSecret)
+								.having(sql<boolean>`bool_and(${tile.isComplete}) is true`)
 						)
-
-						
-			})
-
-			
+					)
+				)
+		})
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -301,22 +284,18 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		
-		
-			await event.locals.db
-				.update(room)
-				.set({
-					state: State.LOCKED
-				})
-				.where(
-					and(
-						eq(room.state, State.SETUP),
-						eq(room.code, event.params.code),
-						isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
-					)
+		await event.locals.db
+			.update(room)
+			.set({
+				state: State.LOCKED
+			})
+			.where(
+				and(
+					eq(room.state, State.SETUP),
+					eq(room.code, event.params.code),
+					isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
 				)
-
-				
+			)
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -331,22 +310,18 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-	
-		
-			await event.locals.db
-				.update(room)
-				.set({
-					state: State.SETUP
-				})
-				.where(
-					and(
-						eq(room.state, State.LOCKED),
-						eq(room.code, event.params.code),
-						isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
-					)
+		await event.locals.db
+			.update(room)
+			.set({
+				state: State.SETUP
+			})
+			.where(
+				and(
+					eq(room.state, State.LOCKED),
+					eq(room.code, event.params.code),
+					isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
 				)
-
-				
+			)
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -361,101 +336,94 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-	
-		
-			await event.locals.db.transaction(async (tx) => {
-				const update = tx
-					.update(room)
-					.set({
-						state: State.RUNNING
-					})
-					.where(
-						and(
-							eq(room.state, State.LOCKED),
-							eq(room.code, event.params.code),
-							isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
-						)
+		await event.locals.db.transaction(async (tx) => {
+			const update = tx
+				.update(room)
+				.set({
+					state: State.RUNNING
+				})
+				.where(
+					and(
+						eq(room.state, State.LOCKED),
+						eq(room.code, event.params.code),
+						isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
 					)
-					.returning({ isWithFreeTile: room.isWithFreeTile })
+				)
+				.returning({ isWithFreeTile: room.isWithFreeTile })
 
-				const players = await tx.query.player.findMany({
-					where: eq(player.roomCode, event.params.code),
-					columns: {
-						roomCode: true,
-						userSecret: true
-					}
-				})
-
-				const tiles = await tx.query.tile.findMany({
-					where: eq(tile.roomCode, event.params.code)
-				})
-
-				if (tiles.length < 25) {
-					throw error(400, 'At least 25 tiles are required!')
+			const players = await tx.query.player.findMany({
+				where: eq(player.roomCode, event.params.code),
+				columns: {
+					roomCode: true,
+					userSecret: true
 				}
-
-				const rows: InferModel<typeof boardRow, 'insert'>[] = []
-				const boardTileToRows: InferModel<typeof boardTileToRow, 'insert'>[] = []
-				const boardTiles = players.flatMap((player) => {
-					const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
-					const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
-					const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
-
-					rows.push(...vertical.map((id) => ({ id })))
-					rows.push(...horizontal.map((id) => ({ id })))
-					rows.push(...diagonal.map((id) => ({ id })))
-
-					return getRandomElements(tiles, 25).map((tile, i) => {
-						const rows = [horizontal[Math.floor(i / 5)], vertical[i % 5]]
-
-						if (i % 5 === Math.floor(i / 5)) {
-							rows.push(diagonal[0])
-						}
-
-						if (4 - (i % 5) === Math.floor(i / 5)) {
-							rows.push(diagonal[1])
-						}
-
-						const id = crypto.randomUUID()
-						boardTileToRows.push(...rows.map((rowId) => ({ boardTileId: id, rowId })))
-
-						return {
-							id,
-							index: i,
-							tileId: tile.id,
-							playerRoomCode: player.roomCode,
-							playerUserSecret: player.userSecret
-						} satisfies InferModel<typeof boardTile, 'insert'>
-					})
-				})
-
-				const [bingo] = await update
-
-				if (bingo.isWithFreeTile) {
-					const id = crypto.randomUUID()
-
-					await tx.insert(tile).values({
-						content: 'Free',
-						isComplete: true,
-						roomCode: event.params.code,
-						userSecret: secret,
-						id
-					})
-
-					for (const boardTile of boardTiles.filter(({ index }) => index === 12)) {
-						boardTile.tileId = id
-					}
-				}
-
-				await Promise.all([
-					tx.insert(boardTile).values(boardTiles),
-					tx.insert(boardRow).values(rows)
-				])
-
-				await tx.insert(boardTileToRow).values(boardTileToRows)
 			})
 
-			
+			const tiles = await tx.query.tile.findMany({
+				where: eq(tile.roomCode, event.params.code)
+			})
+
+			if (tiles.length < 25) {
+				throw error(400, 'At least 25 tiles are required!')
+			}
+
+			const rows: InferModel<typeof boardRow, 'insert'>[] = []
+			const boardTileToRows: InferModel<typeof boardTileToRow, 'insert'>[] = []
+			const boardTiles = players.flatMap((player) => {
+				const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
+				const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
+				const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
+
+				rows.push(...vertical.map((id) => ({ id })))
+				rows.push(...horizontal.map((id) => ({ id })))
+				rows.push(...diagonal.map((id) => ({ id })))
+
+				return getRandomElements(tiles, 25).map((tile, i) => {
+					const rows = [horizontal[Math.floor(i / 5)], vertical[i % 5]]
+
+					if (i % 5 === Math.floor(i / 5)) {
+						rows.push(diagonal[0])
+					}
+
+					if (4 - (i % 5) === Math.floor(i / 5)) {
+						rows.push(diagonal[1])
+					}
+
+					const id = crypto.randomUUID()
+					boardTileToRows.push(...rows.map((rowId) => ({ boardTileId: id, rowId })))
+
+					return {
+						id,
+						index: i,
+						tileId: tile.id,
+						playerRoomCode: player.roomCode,
+						playerUserSecret: player.userSecret
+					} satisfies InferModel<typeof boardTile, 'insert'>
+				})
+			})
+
+			const [bingo] = await update
+
+			if (bingo.isWithFreeTile) {
+				const id = crypto.randomUUID()
+
+				await tx.insert(tile).values({
+					content: 'Free',
+					isComplete: true,
+					roomCode: event.params.code,
+					userSecret: secret,
+					id
+				})
+
+				for (const boardTile of boardTiles.filter(({ index }) => index === 12)) {
+					boardTile.tileId = id
+				}
+			}
+
+			await Promise.all([tx.insert(boardTile).values(boardTiles), tx.insert(boardRow).values(rows)])
+
+			await tx.insert(boardTileToRow).values(boardTileToRows)
+		})
 
 		invalidateRoom(event, form.data.socketId)
 
