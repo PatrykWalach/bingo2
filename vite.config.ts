@@ -5,7 +5,10 @@ import { defineConfig } from 'vite'
 export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
-		strictPort: true
+		strictPort: true,
+		fs:{
+			allow:['./.yarn']
+		}
 	},
 	preview: {
 		port: 5173

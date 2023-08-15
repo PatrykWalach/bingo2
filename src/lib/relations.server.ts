@@ -1,4 +1,5 @@
 import { relations } from 'drizzle-orm'
+import { integer, pgTable, text } from 'drizzle-orm/pg-core'
 import { boardTile, player, room, tile, user } from './schema.server'
 
 export * from './schema.server'
@@ -27,6 +28,13 @@ export const tileRelations = relations(tile, ({ one, many }) => ({
 		references: [player.userSecret, player.roomCode]
 	})
 }))
+
+export const isCompleteTileCountTable = pgTable('is_complete_tilecount_view', {
+	roomCode: text('roomCode').notNull(),
+	userSecret: text('userSecret').notNull(),
+	board: integer('board').notNull()
+})
+
 export const playerRelations = relations(player, ({ one, many }) => ({
 	room: one(room, {
 		fields: [player.roomCode],
@@ -36,5 +44,9 @@ export const playerRelations = relations(player, ({ one, many }) => ({
 		fields: [player.userSecret],
 		references: [user.secret]
 	}),
-	board: many(boardTile)
+	board: many(boardTile),
+	count: one(isCompleteTileCountTable, {
+		fields: [player.roomCode, player.userSecret],
+		references: [isCompleteTileCountTable.roomCode, isCompleteTileCountTable.userSecret]
+	})
 }))

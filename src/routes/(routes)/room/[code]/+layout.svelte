@@ -13,7 +13,7 @@
 		return (a: V, b: V) => key(a) - key(b)
 	}
 
-	$: players = data.LayoutViewer.room.players.sort(comparingNumber((player) => player._count.board))
+	$: players = data.LayoutViewer.room.players.sort(comparingNumber((player) => player.count.board))
 </script>
 
 <div class="mx-auto w-full max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
@@ -54,7 +54,7 @@
 													{player.name}
 												</span>
 												<span class="ml-auto text-xl">
-													{isRunning ? player._count.board : ''}
+													{isRunning ? player.count.board : ''}
 												</span>
 											</div>
 											<div class="flex justify-between gap-1">

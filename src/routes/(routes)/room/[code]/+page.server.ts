@@ -1,9 +1,9 @@
-import { Role, State, TOKEN, WinCondition } from '$lib/constants'
+import { State, TOKEN, WinCondition } from '$lib/constants'
 
 import { isGameMaster, throwIfNotFound } from '$lib/notFound'
-import { boardTile, boardTileToRow, player, room, tile } from '$lib/schema.server'
+import { boardRow, boardTile, boardTileToRow, player, room, tile } from '$lib/schema.server'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
-import { and, eq, exists, inArray, ne, or, sql } from 'drizzle-orm'
+import { and, eq, exists, inArray, ne, or, sql, type InferModel } from 'drizzle-orm'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import type { Actions, RequestEvent } from './$types'
@@ -308,18 +308,18 @@ export const actions: Actions = {
 		const secret = getSecretOrThrow(event)
 
 		try {
-			await event.locals.db.bingo.update({
-				data: {
+			await event.locals.db
+				.update(room)
+				.set({
 					state: State.LOCKED
-				},
-				where: {
-					state: State.SETUP,
-					code: event.params.code,
-					players: {
-						some: { role: Role.GAME_MASTER, userSecret: secret }
-					}
-				}
-			})
+				})
+				.where(
+					and(
+						eq(room.state, State.SETUP),
+						eq(room.code, event.params.code),
+						isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
+					)
+				)
 		} catch (e) {
 			console.error(e)
 			throw e
@@ -339,18 +339,18 @@ export const actions: Actions = {
 		const secret = getSecretOrThrow(event)
 
 		try {
-			await event.locals.db.bingo.update({
-				data: {
+			await event.locals.db
+				.update(room)
+				.set({
 					state: State.SETUP
-				},
-				where: {
-					state: State.LOCKED,
-					code: event.params.code,
-					players: {
-						some: { role: Role.GAME_MASTER, userSecret: secret }
-					}
-				}
-			})
+				})
+				.where(
+					and(
+						eq(room.state, State.LOCKED),
+						eq(room.code, event.params.code),
+						isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
+					)
+				)
 		} catch (e) {
 			console.error(e)
 			throw e
@@ -370,34 +370,40 @@ export const actions: Actions = {
 		const secret = getSecretOrThrow(event)
 
 		try {
-			await event.locals.db.$transaction(async (transaction) => {
-				const bingo = await transaction.bingo.update({
-					data: {
+			await event.locals.db.transaction(async (tx) => {
+				const update = tx
+					.update(room)
+					.set({
 						state: State.RUNNING
-					},
-					where: {
-						state: State.LOCKED,
-						code: event.params.code,
-						players: {
-							some: { role: Role.GAME_MASTER, userSecret: secret }
-						}
-					},
-					include: {
-						players: true
+					})
+					.where(
+						and(
+							eq(room.state, State.LOCKED),
+							eq(room.code, event.params.code),
+							isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
+						)
+					)
+					.returning({ isWithFreeTile: room.isWithFreeTile })
+
+				const players = await tx.query.player.findMany({
+					where: eq(player.roomCode, event.params.code),
+					columns: {
+						roomCode: true,
+						userSecret: true
 					}
 				})
 
-				const tiles = await transaction.tile.findMany({
-					where: { roomCode: event.params.code }
+				const tiles = await tx.query.tile.findMany({
+					where: eq(tile.roomCode, event.params.code)
 				})
 
 				if (tiles.length < 25) {
 					throw error(400, 'At least 25 tiles are required!')
 				}
 
-				const rows: Prisma.RowCreateManyInput[] = []
-				const boardTileToRows: Prisma.BoardTileToRowCreateManyInput[] = []
-				const boardTiles = bingo.players.flatMap((player) => {
+				const rows: InferModel<typeof boardRow, 'insert'>[] = []
+				const boardTileToRows: InferModel<typeof boardTileToRow, 'insert'>[] = []
+				const boardTiles = players.flatMap((player) => {
 					const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
 					const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
 					const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
@@ -419,42 +425,41 @@ export const actions: Actions = {
 
 						const id = crypto.randomUUID()
 						boardTileToRows.push(...rows.map((rowId) => ({ boardTileId: id, rowId })))
-						return Prisma.validator<Prisma.BoardTileCreateManyInput>()({
+
+						return {
 							id,
 							index: i,
 							tileId: tile.id,
-							roomCode: player.roomCode,
-							userSecret: player.userSecret
-						})
+							playerRoomCode: player.roomCode,
+							playerUserSecret: player.userSecret
+						} satisfies InferModel<typeof boardTile, 'insert'>
 					})
 				})
 
+				const [bingo] = await update
+
 				if (bingo.isWithFreeTile) {
-					const freeTile = await transaction.tile.create({
-						data: {
-							content: 'Free',
-							isComplete: true,
-							author: {
-								connect: {
-									roomCode_userSecret: {
-										roomCode: event.params.code,
-										userSecret: secret
-									}
-								}
-							}
-						}
+					const id = crypto.randomUUID()
+
+					await tx.insert(tile).values({
+						content: 'Free',
+						isComplete: true,
+						roomCode: event.params.code,
+						userSecret: secret,
+						id
 					})
 
 					for (const boardTile of boardTiles.filter(({ index }) => index === 12)) {
-						boardTile.tileId = freeTile.id
+						boardTile.tileId = id
 					}
 				}
 
 				await Promise.all([
-					transaction.boardTile.createMany({ data: boardTiles }),
-					transaction.row.createMany({ data: rows })
+					tx.insert(boardTile).values(boardTiles),
+					tx.insert(boardRow).values(rows)
 				])
-				await transaction.boardTileToRow.createMany({ data: boardTileToRows })
+
+				await tx.insert(boardTileToRow).values(boardTileToRows)
 			})
 		} catch (e) {
 			console.error(e)

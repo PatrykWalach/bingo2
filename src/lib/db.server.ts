@@ -8,7 +8,7 @@ export const client = drizzle(
 	createPool({
 		connectionString: POSTGRES_URL
 	}),
-	{ schema, logger: true }
+	{ schema }
 )
 
 export type Client = typeof client
