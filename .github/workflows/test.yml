@@ -119,3 +119,5 @@ jobs:
 
    - name: Svelte Check
      run: yarn turbo check
+     env:
+      POSTGRES_URL: ''
