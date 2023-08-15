@@ -31,8 +31,6 @@ jobs:
       cache: yarn
    - run: yarn --immutable
 
- 
-
    - name: Get installed Playwright version
      id: playwright-version
      run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
