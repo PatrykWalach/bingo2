@@ -28,6 +28,7 @@ jobs:
    - uses: actions/setup-node@v3
      with:
       node-version: 18.17.1
+      cache: yarn
    - run: yarn --immutable
 
  
@@ -73,6 +74,7 @@ jobs:
    - uses: actions/setup-node@v3
      with:
       node-version: 18.17.1
+      cache: yarn
    - run: yarn --immutable
 
    - name: Lint
@@ -92,6 +94,7 @@ jobs:
    - uses: actions/setup-node@v3
      with:
       node-version: 18.17.1
+      cache: yarn
    - run: yarn --immutable
 
    - name: Format
@@ -111,6 +114,7 @@ jobs:
    - uses: actions/setup-node@v3
      with:
       node-version: 18.17.1
+      cache: yarn
    - run: yarn --immutable
 
    - name: Svelte Check
