@@ -29,8 +29,7 @@ jobs:
      with:
       node-version: 18.17.1
 
-   - run: corepack enable
-   - run: corepack prepare yarn@3.6.1 --activate
+ 
 
    - name: Get installed Playwright version
      id: playwright-version
@@ -45,7 +44,7 @@ jobs:
       key: playwright-${{ env.PLAYWRIGHT_VERSION }}
 
    - name: Install Playwright
-     run: yarn dlx playwright install --with-deps
+     run: yarn playwright install --with-deps
      if: steps.playwright-cache.outputs.cache-hit != 'true'
 
    - name: Install postgresql
@@ -55,7 +54,7 @@ jobs:
       postgresql db: devdb
 
    - name: Run E2E tests 🧪
-     run: yarn dlx turbo test -- --project=${{ matrix.project }}
+     run: yarn turbo test -- --project=${{ matrix.project }}
 
    - name: Upload test results
      if: always()
@@ -75,7 +74,7 @@ jobs:
       node-version: 18.17.1
 
    - name: Lint
-     run: yarn dlx turbo lint
+     run: yarn turbo lint
 
  format:
   runs-on: ubuntu-latest
@@ -93,7 +92,7 @@ jobs:
       node-version: 18.17.1
 
    - name: Format
-     run: yarn dlx turbo format
+     run: yarn turbo format
 
    - name: Commit changes
      uses: stefanzweifel/git-auto-commit-action@v4
@@ -111,4 +110,4 @@ jobs:
       node-version: 18.17.1
 
    - name: Svelte Check
-     run: yarn dlx turbo check
+     run: yarn turbo check
