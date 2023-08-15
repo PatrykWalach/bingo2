@@ -1,6 +1,14 @@
 {
 	"$schema": "https://turbo.build/schema.json",
-	"globalEnv": ["ORIGIN", "PORT", "HOST"],
+	"globalEnv": [
+		"ORIGIN",
+		"PORT",
+		"HOST",
+		"POSTGRES_HOST",
+		"POSTGRES_PASSWORD",
+		"POSTGRES_USER",
+		"POSTGRES_DATABASE"
+	],
 	"pipeline": {
 		"build": {
 			"outputs": [".svelte-kit/**", ".vercel/**"],
