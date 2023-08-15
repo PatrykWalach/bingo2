@@ -55,6 +55,8 @@ jobs:
 
    - name: Run E2E tests 🧪
      run: yarn turbo test -- --project=${{ matrix.project }}
+     env:
+      POSTGRES_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
 
    - name: Upload test results
      if: always()
