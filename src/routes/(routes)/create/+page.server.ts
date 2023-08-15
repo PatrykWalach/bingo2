@@ -27,7 +27,7 @@ export const actions: Actions = {
 			return fail(400, { create: form })
 		}
 
-		let randomSecret = crypto.randomUUID()
+		const randomSecret = crypto.randomUUID()
 
 		const secret = event.cookies.get(TOKEN) ?? randomSecret
 

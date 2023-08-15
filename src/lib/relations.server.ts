@@ -18,7 +18,7 @@ export const boardTileRelations = relations(boardTile, ({ one }) => ({
 		references: [player.roomCode, player.userSecret]
 	})
 }))
-export const tileRelations = relations(tile, ({ one, many }) => ({
+export const tileRelations = relations(tile, ({ one }) => ({
 	authorUser: one(user, {
 		fields: [tile.userSecret],
 		references: [user.secret]

@@ -113,7 +113,7 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
+		
 			await event.locals.db.transaction(async (tx) => {
 				const player = await tx.query.player.findFirst({
 					where: (player) =>
@@ -142,10 +142,6 @@ export const actions: Actions = {
 					userSecret: player.userSecret
 				})
 			})
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -160,7 +156,8 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
+	
+		
 			const isStateIn = (states: State[]) =>
 				exists(
 					event.locals.db
@@ -183,10 +180,8 @@ export const actions: Actions = {
 						)
 					)
 				)
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+
+				
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -201,7 +196,8 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
+		
+		
 			await event.locals.db.transaction(async (tx) => {
 				const isNotDone = exists(
 					event.locals.db
@@ -233,7 +229,8 @@ export const actions: Actions = {
 					return
 				}
 
-				try {
+				
+				
 					await tx
 						.update(room)
 						.set({ state: State.DONE })
@@ -254,11 +251,11 @@ export const actions: Actions = {
 								)
 							)
 						)
-				} catch (e) {
-					throw e
-				}
 
-				try {
+						
+
+			
+						
 					await tx
 						.update(room)
 						.set({ state: State.DONE })
@@ -285,14 +282,11 @@ export const actions: Actions = {
 								)
 							)
 						)
-				} catch (e) {
-					throw e
-				}
+
+						
 			})
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+
+			
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -307,7 +301,8 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
+		
+		
 			await event.locals.db
 				.update(room)
 				.set({
@@ -320,10 +315,8 @@ export const actions: Actions = {
 						isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
 					)
 				)
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+
+				
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -338,7 +331,8 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
+	
+		
 			await event.locals.db
 				.update(room)
 				.set({
@@ -351,10 +345,8 @@ export const actions: Actions = {
 						isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
 					)
 				)
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+
+				
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -369,7 +361,8 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
+	
+		
 			await event.locals.db.transaction(async (tx) => {
 				const update = tx
 					.update(room)
@@ -461,10 +454,8 @@ export const actions: Actions = {
 
 				await tx.insert(boardTileToRow).values(boardTileToRows)
 			})
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+
+			
 
 		invalidateRoom(event, form.data.socketId)
 
