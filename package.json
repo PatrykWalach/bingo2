@@ -11,7 +11,7 @@
 		"sync": "svelte-kit sync",
 		"lint": "eslint .",
 		"prettier": "prettier --cache --cache-strategy content",
-		"format": "npm run prettier -- --write .",
+		"format": "pnpm run prettier -- --write .",
 		"generate": "drizzle-kit generate:pg",
 		"migrate": ""
 	},
@@ -46,7 +46,7 @@
 		"typescript": "^5.1.6",
 		"vite": "^4.4.4"
 	},
-	"packageManager": "yarn@3.6.1",
+	"packageManager": "pnpm@8.0.0",
 	"type": "module",
 	"dependencies": {
 		"@vercel/postgres": "^0.4.1",
