@@ -1,5 +1,5 @@
-import { relations } from 'drizzle-orm'
-import { integer, pgTable, text } from 'drizzle-orm/pg-core'
+import { and, eq, relations, sql } from 'drizzle-orm'
+import { QueryBuilder, integer, pgTable, pgView, text } from 'drizzle-orm/pg-core'
 import { boardTile, player, room, tile, user } from './schema.server'
 
 export * from './schema.server'
@@ -34,6 +34,25 @@ export const isCompleteTileCountTable = pgTable('is_complete_tilecount_view', {
 	userSecret: text('userSecret').notNull(),
 	board: integer('board').notNull()
 })
+
+export const isCompleteTileCountView = pgView('is_complete_tilecount_view').as((qb) =>
+	qb
+		.select({
+			roomCode: player.roomCode,
+			userSecret: player.userSecret,
+			board: sql<number>`count(${tile.isComplete} = true)`.mapWith(Number).as('board')
+		})
+		.from(boardTile)
+		.innerJoin(tile, eq(boardTile.tileId, tile.id))
+		.rightJoin(
+			player,
+			and(
+				eq(player.roomCode, boardTile.playerRoomCode),
+				eq(player.userSecret, boardTile.playerUserSecret)
+			)
+		)
+		.groupBy(player.roomCode, player.userSecret)
+)
 
 export const playerRelations = relations(player, ({ one, many }) => ({
 	room: one(room, {

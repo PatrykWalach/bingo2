@@ -48,7 +48,7 @@ export const actions: Actions = {
 					.then(throwIfNotFound)
 
 				if (randomSecret === secret) {
-					tx.insert(user).values({
+					await tx.insert(user).values({
 						id: crypto.randomUUID(),
 						secret
 					})
