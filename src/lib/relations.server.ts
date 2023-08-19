@@ -1,5 +1,5 @@
 import { and, eq, relations, sql } from 'drizzle-orm'
-import { QueryBuilder, integer, pgTable, pgView, text } from 'drizzle-orm/pg-core'
+import { integer, pgTable, pgView, text } from 'drizzle-orm/pg-core'
 import { boardTile, player, room, tile, user } from './schema.server'
 
 export * from './schema.server'
