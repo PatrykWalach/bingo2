@@ -11,7 +11,7 @@
 		"sync": "svelte-kit sync",
 		"lint": "eslint .",
 		"prettier": "prettier --cache --cache-strategy content",
-		"format": "npm run prettier -- --write .",
+		"format": "pnpm run prettier --write .",
 		"generate": "prisma generate",
 		"migrate": "prisma db push"
 	},
