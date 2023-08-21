@@ -7,7 +7,7 @@ const url =
 
 const config: PlaywrightTestConfig = {
 	webServer: {
-		command: 'npx turbo preview',
+		command: 'pnpx turbo preview',
 		url,
 		timeout: 3 * 60 * 1000,
 		reuseExistingServer: !process.env.CI
