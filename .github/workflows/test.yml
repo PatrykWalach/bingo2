@@ -1,147 +1,146 @@
 name: Test
 
 on:
- push:
-  branches: ['master']
- pull_request:
-  branches: ['master']
+  push:
+    branches: ['master']
+  pull_request:
+    branches: ['master']
 
 permissions:
- contents: read
+  contents: read
 
 env:
- PUSHER_APP_ID: ${{ secrets.PUSHER_APP_ID }}
- PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}
- PUBLIC_PUSHER_KEY: ${{ vars.PUBLIC_PUSHER_KEY }}
+  PUSHER_APP_ID: ${{ secrets.PUSHER_APP_ID }}
+  PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}
+  PUBLIC_PUSHER_KEY: ${{ vars.PUBLIC_PUSHER_KEY }}
 
 jobs:
- e2e-test:
-  runs-on: ubuntu-latest
-  strategy:
-   fail-fast: false
-   matrix:
-    project: [default, no-js, mobile]
+  e2e-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [default, no-js, mobile]
 
-  name: E2E
-  steps:
-   - uses: actions/checkout@v3
-   - uses: pnpm/action-setup@v2
-     with:
-      version: 8.6.12
+    name: E2E
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.12
 
-   - uses: actions/setup-node@v3
-     with:
-      node-version: 16
-      cache: pnpm
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: pnpm
 
-   - name: Get installed Playwright version
-     id: playwright-version
-     run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
 
-   - name: Cache playwright binaries
-     uses: actions/cache@v3
-     id: playwright-cache
-     with:
-      path: |
-       ~/.cache/ms-playwright
-      key: playwright-${{ env.PLAYWRIGHT_VERSION }}
+      - name: Cache playwright binaries
+        uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: playwright-${{ env.PLAYWRIGHT_VERSION }}
 
-   - name: Install dependencies 📦
-     run: pnpm install --frozen-lockfile
+      - name: Install dependencies 📦
+        run: pnpm install --frozen-lockfile
 
-   - name: Install Playwright
-     run: pnpm exec playwright install --with-deps
-     if: steps.playwright-cache.outputs.cache-hit != 'true'
+      - name: Install Playwright
+        run: pnpm exec playwright install --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
 
-   - name: Install postgresql
-     uses: harmon758/postgresql-action@v1
-     with:
-      postgresql password: dipping-culture
-      postgresql db: devdb
+      - name: Install postgresql
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql password: dipping-culture
+          postgresql db: devdb
 
-   - name: Run E2E tests 🧪
-     run: pnpm exec turbo test -- -- --project=${{ matrix.project }}
-     env:
-      POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
-      POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
+      - name: Run E2E tests 🧪
+        run: pnpm exec turbo test -- -- --project=${{ matrix.project }}
+        env:
+          POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
+          POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
 
-   - name: Upload test results
-     if: always()
-     uses: actions/upload-artifact@v3
-     with:
-      name: ${{ matrix.project }}-playwright-report
-      path: playwright-report
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.project }}-playwright-report
+          path: playwright-report
 
- eslint:
-  runs-on: ubuntu-latest
+  eslint:
+    runs-on: ubuntu-latest
 
-  name: Lint
-  steps:
-   - uses: actions/checkout@v3
-   - uses: pnpm/action-setup@v2
-     with:
-      version: 8.6.12
+    name: Lint
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.12
 
-   - uses: actions/setup-node@v3
-     with:
-      node-version: 16
-      cache: pnpm
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: pnpm
 
-   - name: Install dependencies 📦
-     run: pnpm install --frozen-lockfile
+      - name: Install dependencies 📦
+        run: pnpm install --frozen-lockfile
 
-   - name: Lint
-     run: pnpm exec turbo lint
+      - name: Lint
+        run: pnpm exec turbo lint
 
- format:
-  runs-on: ubuntu-latest
-  name: Format
-  permissions:
-   contents: write
+  format:
+    runs-on: ubuntu-latest
+    name: Format
+    permissions:
+      contents: write
 
-  steps:
-   - uses: actions/checkout@v3
-     with:
-      token: ${{ secrets.PAT }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
 
-   - uses: pnpm/action-setup@v2
-     with:
-      version: 8.6.12
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.12
 
-   - uses: actions/setup-node@v3
-     with:
-      node-version: 16
-      cache: pnpm
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: pnpm
 
-   - name: Install dependencies 📦
-     run: pnpm install --frozen-lockfile
+      - name: Install dependencies 📦
+        run: pnpm install --frozen-lockfile
 
-   - name: Format
-     run: pnpm exec turbo format
+      - name: Format
+        run: pnpm exec turbo format
 
-   - name: Commit changes
-     uses: stefanzweifel/git-auto-commit-action@v4
-     with:
-      commit_message: 'refactor: run format'
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: 'refactor: run format'
 
- svelte-check:
-  runs-on: ubuntu-latest
+  svelte-check:
+    runs-on: ubuntu-latest
 
-  name: Typecheck
-  steps:
-   - uses: actions/checkout@v3
-   - uses: pnpm/action-setup@v2
-     with:
-      version: 8.6.12
+    name: Typecheck
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.12
 
-   - uses: actions/setup-node@v3
-     with:
-      node-version: 16
-      cache: pnpm
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: pnpm
 
-   - name: Install dependencies 📦
-     run: pnpm install --frozen-lockfile
+      - name: Install dependencies 📦
+        run: pnpm install --frozen-lockfile
 
-   - name: Svelte Check
-     run: pnpm exec turbo check
- 
+      - name: Svelte Check
+        run: pnpm exec turbo check
