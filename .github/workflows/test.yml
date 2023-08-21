@@ -25,11 +25,14 @@ jobs:
   name: E2E
   steps:
    - uses: actions/checkout@v3
+   - uses: pnpm/action-setup@v2
+     with:
+      version: 8.6.12
 
    - uses: actions/setup-node@v3
      with:
       node-version: 16
-      cache: npm
+      cache: pnpm
 
    - name: Get installed Playwright version
      id: playwright-version
@@ -44,10 +47,10 @@ jobs:
       key: playwright-${{ env.PLAYWRIGHT_VERSION }}
 
    - name: Install dependencies 📦
-     run: npm ci
+     run: pnpm install --frozen-lockfile
 
    - name: Install Playwright
-     run: npm exec playwright install --with-deps
+     run: pnpm exec playwright install --with-deps
      if: steps.playwright-cache.outputs.cache-hit != 'true'
 
    - name: Install postgresql
@@ -57,7 +60,7 @@ jobs:
       postgresql db: devdb
 
    - name: Run E2E tests 🧪
-     run: npm exec turbo test -- -- --project=${{ matrix.project }}
+     run: pnpm exec turbo test -- -- --project=${{ matrix.project }}
      env:
       POSTGRES_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
 
@@ -74,17 +77,20 @@ jobs:
   name: Lint
   steps:
    - uses: actions/checkout@v3
+   - uses: pnpm/action-setup@v2
+     with:
+      version: 8.6.12
 
    - uses: actions/setup-node@v3
      with:
       node-version: 16
-      cache: npm
+      cache: pnpm
 
    - name: Install dependencies 📦
-     run: npm ci
+     run: pnpm install --frozen-lockfile
 
    - name: Lint
-     run: npm exec turbo lint
+     run: pnpm exec turbo lint
 
  format:
   runs-on: ubuntu-latest
@@ -97,16 +103,20 @@ jobs:
      with:
       token: ${{ secrets.PAT }}
 
+   - uses: pnpm/action-setup@v2
+     with:
+      version: 8.6.12
+
    - uses: actions/setup-node@v3
      with:
       node-version: 16
-      cache: npm
+      cache: pnpm
 
    - name: Install dependencies 📦
-     run: npm ci
+     run: pnpm install --frozen-lockfile
 
    - name: Format
-     run: npm exec turbo format
+     run: pnpm exec turbo format
 
    - name: Commit changes
      uses: stefanzweifel/git-auto-commit-action@v4
@@ -119,16 +129,19 @@ jobs:
   name: Typecheck
   steps:
    - uses: actions/checkout@v3
+   - uses: pnpm/action-setup@v2
+     with:
+      version: 8.6.12
 
    - uses: actions/setup-node@v3
      with:
       node-version: 16
-      cache: npm
+      cache: pnpm
 
    - name: Install dependencies 📦
-     run: npm ci
+     run: pnpm install --frozen-lockfile
 
    - name: Svelte Check
-     run: npm exec turbo check
+     run: pnpm exec turbo check
      env:
       POSTGRES_URL: ''
