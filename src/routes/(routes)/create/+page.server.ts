@@ -1,5 +1,6 @@
 import { Role, TOKEN } from '$lib/constants'
-import { addPlayer } from '$lib/db.server'
+import { createPlayer } from '$lib/db.server'
+import { player, room as rooms, user } from '$lib/schema.server'
 import { faker } from '@faker-js/faker/locale/en'
 import { fail, redirect } from '@sveltejs/kit'
 import { superValidate } from 'sveltekit-superforms/server'
@@ -26,17 +27,34 @@ export const actions: Actions = {
 			return fail(400, { create: form })
 		}
 
-		const secret = event.cookies.get(TOKEN) ?? crypto.randomUUID()
+		const randomSecret = crypto.randomUUID()
 
-		const room = await event.locals.db.bingo.create({
-			data: {
-				code: faker.word.words(3).replaceAll(' ', '-'),
-				name: form.data.name,
-				players: addPlayer({
-					role: Role.GAME_MASTER,
-					secret
+		const secret = event.cookies.get(TOKEN) ?? randomSecret
+
+		const room = await event.locals.db.transaction(async (tx) => {
+			const [room] = await tx
+				.insert(rooms)
+				.values({
+					code: faker.word.words(3).replaceAll(' ', '-'),
+					name: form.data.name
+				})
+				.returning({ code: rooms.code })
+
+			if (randomSecret === secret) {
+				await tx.insert(user).values({
+					secret,
+					id: crypto.randomUUID()
 				})
 			}
+
+			await tx.insert(player).values({
+				role: Role.GAME_MASTER,
+				userSecret: secret,
+				roomCode: room.code,
+				...createPlayer()
+			})
+
+			return room
 		})
 
 		const maxAge = 365 * 24 * 60

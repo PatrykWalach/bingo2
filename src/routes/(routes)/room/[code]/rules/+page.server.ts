@@ -1,6 +1,9 @@
-import { TOKEN } from '$lib/constants'
-import { Prisma, Role, State, WinCondition } from '@prisma/client'
-import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
+import { State, TOKEN, WinCondition } from '$lib/constants'
+import { isGameMaster, throwIfNotFound } from '$lib/notFound'
+import { room } from '$lib/schema.server'
+
+import { fail, redirect, type Actions, type ServerLoad } from '@sveltejs/kit'
+import { and, eq, inArray } from 'drizzle-orm'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 
@@ -11,19 +14,19 @@ const save = z.object({
 })
 
 export const load: ServerLoad = async (event) => {
-	const player = await event.locals.db.player
-		.findUniqueOrThrow({
-			where: {
-				roomCode_userSecret: {
-					roomCode: String(event.params.code),
-					userSecret: String(event.cookies.get(TOKEN))
-				}
+	const player = await event.locals.db.query.player
+		.findFirst({
+			where: (player) =>
+				and(
+					eq(player.roomCode, String(event.params.code)),
+					eq(player.userSecret, String(event.cookies.get(TOKEN)))
+				),
+			columns: {
+				role: true
 			},
-
-			select: {
-				role: true,
+			with: {
 				room: {
-					select: {
+					columns: {
 						state: true,
 						isWithFreeTile: true,
 						isWithHiddenBoards: true,
@@ -32,12 +35,7 @@ export const load: ServerLoad = async (event) => {
 				}
 			}
 		})
-		.catch((e) => {
-			if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-				throw error(404, 'Sounds like skill issue!')
-			}
-			throw e
-		})
+		.catch(throwIfNotFound)
 
 	return {
 		save: superValidate(
@@ -57,7 +55,7 @@ export const load: ServerLoad = async (event) => {
 	}
 }
 
-export const actions = {
+export const actions: Actions = {
 	default: async (event) => {
 		const form = await superValidate(event, save)
 
@@ -65,23 +63,23 @@ export const actions = {
 			return fail(400, { create: form })
 		}
 
-		await event.locals.db.bingo.update({
-			data: {
+		await event.locals.db
+			.update(room)
+			.set({
 				isWithFreeTile: form.data.isWithFreeTile,
 				isWithHiddenBoards: form.data.isWithHiddenBoards,
 				winCodition: form.data.winCondition
-			},
-			where: {
-				state: { in: [State.SETUP, State.LOCKED] },
-				code: event.params.code,
-				players: {
-					some: {
-						role: Role.GAME_MASTER,
-						userSecret: event.cookies.get(TOKEN)
-					}
-				}
-			}
-		})
+			})
+			.where(
+				and(
+					eq(room.code, String(event.params.code)),
+					inArray(room.state, [State.SETUP, State.LOCKED]),
+					isGameMaster(event.locals.db, {
+						userSecret: String(event.cookies.get(TOKEN)),
+						roomCode: String(event.params.code)
+					})
+				)
+			)
 
 		throw redirect(303, `/room/${event.params.code}/rules`)
 	}

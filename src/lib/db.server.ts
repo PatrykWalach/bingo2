@@ -1,10 +1,15 @@
 import { faker } from '@faker-js/faker/locale/en'
-import { Prisma, PrismaClient } from '@prisma/client'
-import type { Role } from './constants'
 
-export const client = new PrismaClient({
-	errorFormat: 'pretty'
-})
+import { createPool } from '@vercel/postgres'
+import { drizzle } from 'drizzle-orm/vercel-postgres'
+import * as schema from './relations.server'
+
+export const client = drizzle(
+	createPool({
+		connectionString: POSTGRES_URL
+	}),
+	{ schema }
+)
 
 export type Client = typeof client
 
@@ -31,25 +36,4 @@ export function createPlayer() {
 	}
 }
 
-export function addPlayer(args: { secret: string; role: Role }) {
-	return Prisma.validator<Prisma.PlayerCreateNestedManyWithoutRoomInput>()({
-		create: {
-			role: args.role,
-			...createPlayer(),
-			user: createUser(args)
-		}
-	})
-}
-
-export function createUser(args: { secret: string }) {
-	return Prisma.validator<Prisma.UserCreateNestedOneWithoutPlaysInput>()({
-		connectOrCreate: {
-			where: {
-				secret: args.secret
-			},
-			create: {
-				secret: args.secret
-			}
-		}
-	})
-}
+import { POSTGRES_URL } from '$env/static/private'

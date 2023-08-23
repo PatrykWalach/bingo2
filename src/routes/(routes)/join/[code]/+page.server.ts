@@ -1,8 +1,11 @@
 import { Role, State, TOKEN } from '$lib/constants'
-import { avatars, createPlayer, createUser } from '$lib/db.server'
-import { Prisma } from '@prisma/client'
+import { avatars, createPlayer } from '$lib/db.server'
+
+import { throwIfNotFound } from '$lib/notFound'
+import { player, room as rooms, user } from '$lib/schema.server'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
-import { setError, superValidate } from 'sveltekit-superforms/server'
+import { and, eq } from 'drizzle-orm'
+import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import type { Actions } from './$types'
 
@@ -28,44 +31,53 @@ export const actions: Actions = {
 			return fail(400, { form: form })
 		}
 
-		const secret = event.cookies.get(TOKEN) ?? crypto.randomUUID()
+		const randomSecret = crypto.randomUUID()
+
+		const secret = event.cookies.get(TOKEN) ?? randomSecret
 
 		if (!avatars.some(({ url }) => url === form.data.avatar)) {
 			throw error(400, 'Avatar not valid!')
 		}
 
 		try {
-			await event.locals.db.player.upsert({
-				where: {
-					roomCode_userSecret: {
-						userSecret: secret,
-						roomCode: event.params.code
-					},
-					room: {
-						state: State.SETUP
-					}
-				},
-				update: {
-					avatar: form.data.avatar,
-					color: form.data.color,
-					name: form.data.name
-				},
-				create: {
-					room: {
-						connect: { code: event.params.code, state: State.SETUP }
-					},
-					role: Role.PLAYER,
-					avatar: form.data.avatar,
-					color: form.data.color,
-					name: form.data.name,
-					user: createUser({ secret })
+			await event.locals.db.transaction(async (tx) => {
+				const room = await tx.query.room
+					.findFirst({
+						where: and(eq(rooms.state, State.SETUP), eq(rooms.code, event.params.code))
+					})
+					.then(throwIfNotFound)
+
+				if (randomSecret === secret) {
+					await tx.insert(user).values({
+						id: crypto.randomUUID(),
+						secret
+					})
 				}
+
+				await tx
+					.insert(player)
+					.values({
+						userSecret: secret,
+						role: Role.PLAYER,
+						roomCode: room.code,
+						avatar: form.data.avatar,
+						color: form.data.color,
+						name: form.data.name
+					})
+					.onConflictDoUpdate({
+						set: {
+							avatar: form.data.avatar,
+							color: form.data.color,
+							name: form.data.name
+						},
+						target: [player.userSecret, player.roomCode]
+					})
 			})
 		} catch (e) {
-			if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-				console.error(e)
-				return setError(form, '', 'Bingo is not avalible anymore!')
-			}
+			// if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
+			// 	console.error(e)
+			// 	return setError(form, '', 'Bingo is not avalible anymore!')
+			// }
 			console.error(e)
 			throw e
 		}

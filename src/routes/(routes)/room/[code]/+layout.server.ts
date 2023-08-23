@@ -1,53 +1,51 @@
 import { TOKEN } from '$lib/constants'
-import { Prisma } from '@prisma/client'
-import { error, type ServerLoad } from '@sveltejs/kit'
+import { throwIfNotFound } from '$lib/notFound'
+import { boardTile, player } from '$lib/schema.server'
+
+import type { ServerLoad } from '@sveltejs/kit'
+import { and, eq } from 'drizzle-orm'
 
 export const load: ServerLoad = (event) => {
 	return {
-		LayoutViewer: event.locals.db.player
-			.findUniqueOrThrow({
-				where: {
-					roomCode_userSecret: {
-						roomCode: String(event.params.code),
-						userSecret: String(event.cookies.get(TOKEN))
-					}
-				},
-				select: {
-					user: { select: { id: true } },
+		LayoutViewer: event.locals.db.query.player
+			.findFirst({
+				where: and(
+					eq(player.roomCode, String(event.params.code)),
+					eq(player.userSecret, String(event.cookies.get(TOKEN)))
+				),
+				columns: {},
+				with: {
+					user: { columns: { id: true } },
 					room: {
-						select: {
+						columns: {
 							isWithHiddenBoards: true,
 							code: true,
 							name: true,
-							state: true,
+							state: true
+						},
+						with: {
 							players: {
-								select: {
+								columns: {
 									color: true,
 									avatar: true,
 									role: true,
-									name: true,
+									name: true
+								},
+								with: {
+									user: { columns: { id: true } },
+									count: {
+										columns: {
+											board: true
+										}
+									},
 									board: {
-										orderBy: { index: 'asc' },
-										select: {
-											id: true,
+										orderBy: [boardTile.index],
+										with: {
 											tile: {
-												select: { isComplete: true }
+												columns: { isComplete: true }
 											}
-										}
-									},
-									_count: {
-										select: {
-											board: {
-												where: {
-													tile: {
-														isComplete: true
-													}
-												}
-											}
-										}
-									},
-									user: {
-										select: {
+										},
+										columns: {
 											id: true
 										}
 									}
@@ -57,11 +55,6 @@ export const load: ServerLoad = (event) => {
 					}
 				}
 			})
-			.catch((e) => {
-				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-					throw error(404, 'Sounds like skill issue!')
-				}
-				throw e
-			})
+			.then(throwIfNotFound)
 	}
 }

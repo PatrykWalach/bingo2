@@ -4,7 +4,6 @@
 	import { invalidateAll } from '$app/navigation'
 
 	import { page } from '$app/stores'
-	import { pusher } from '$lib/socket'
 	import { onDestroy, onMount } from 'svelte'
 	import { derived } from 'svelte/store'
 	import type { LayoutData } from './$types'
@@ -13,7 +12,9 @@
 
 	const pathname = derived(page, ($page) => $page.url.pathname)
 
-	onMount(() => {
+	onMount(async () => {
+		const { pusher } = await import('$lib/socket.client')
+
 		let clean = (): void => undefined
 
 		unsubscriber = pathname.subscribe(

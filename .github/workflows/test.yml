@@ -1,130 +1,134 @@
 name: Test
 
 on:
-  push:
-    branches: ['master']
-  pull_request:
-    branches: ['master']
+ push:
+  branches: ['master']
+ pull_request:
+  branches: ['master']
 
 permissions:
-  contents: read
+ contents: read
 
 env:
-  PUSHER_APP_ID: ${{ secrets.PUSHER_APP_ID }}
-  PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}
-  PUBLIC_PUSHER_KEY: ${{ vars.PUBLIC_PUSHER_KEY }}
+ PUSHER_APP_ID: ${{ secrets.PUSHER_APP_ID }}
+ PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}
+ PUBLIC_PUSHER_KEY: ${{ vars.PUBLIC_PUSHER_KEY }}
 
 jobs:
-  e2e-test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        project: [default, no-js, mobile]
+ e2e-test:
+  runs-on: ubuntu-latest
+  strategy:
+   fail-fast: false
+   matrix:
+    project: [default, no-js, mobile]
 
-    name: E2E
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
+  name: E2E
+  steps:
+   - uses: actions/checkout@v3
 
-      - name: Get installed Playwright version
-        id: playwright-version
-        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
+   - uses: actions/setup-node@v3
+     with:
+      node-version: 16
+      cache: npm
 
-      - name: Cache playwright binaries
-        uses: actions/cache@v3
-        id: playwright-cache
-        with:
-          path: |
-            ~/.cache/ms-playwright
-          key: playwright-${{ env.PLAYWRIGHT_VERSION }}
+   - name: Get installed Playwright version
+     id: playwright-version
+     run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
 
-      - name: Install dependencies 📦
-        run: npm ci
+   - name: Cache playwright binaries
+     uses: actions/cache@v3
+     id: playwright-cache
+     with:
+      path: |
+       ~/.cache/ms-playwright
+      key: playwright-${{ env.PLAYWRIGHT_VERSION }}
 
-      - name: Install Playwright
-        run: npx playwright install --with-deps
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+   - name: Install dependencies 📦
+     run: npm ci
 
-      - name: Install postgresql
-        uses: harmon758/postgresql-action@v1
-        with:
-          postgresql password: dipping-culture
-          postgresql db: devdb
+   - name: Install Playwright
+     run: npm exec playwright install --with-deps
+     if: steps.playwright-cache.outputs.cache-hit != 'true'
 
-      - name: Run E2E tests 🧪
-        run: npm exec turbo test -- -- --project=${{ matrix.project }}
-        env:
-          POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
-          POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
+   - name: Install postgresql
+     uses: harmon758/postgresql-action@v1
+     with:
+      postgresql password: dipping-culture
+      postgresql db: devdb
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ matrix.project }}-playwright-report
-          path: playwright-report
+   - name: Run E2E tests 🧪
+     run: npm exec turbo test -- -- --project=${{ matrix.project }}
+     env:
+      POSTGRES_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
 
-  eslint:
-    runs-on: ubuntu-latest
+   - name: Upload test results
+     if: always()
+     uses: actions/upload-artifact@v3
+     with:
+      name: ${{ matrix.project }}-playwright-report
+      path: playwright-report
 
-    name: Lint
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
+ eslint:
+  runs-on: ubuntu-latest
 
-      - name: Install dependencies 📦
-        run: npm ci
+  name: Lint
+  steps:
+   - uses: actions/checkout@v3
 
-      - name: Lint
-        run: npm exec turbo lint
+   - uses: actions/setup-node@v3
+     with:
+      node-version: 16
+      cache: npm
 
-  format:
-    runs-on: ubuntu-latest
-    name: Format
-    permissions:
-      contents: write
+   - name: Install dependencies 📦
+     run: npm ci
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.PAT }}
+   - name: Lint
+     run: npm exec turbo lint
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
+ format:
+  runs-on: ubuntu-latest
+  name: Format
+  permissions:
+   contents: write
 
-      - name: Install dependencies 📦
-        run: npm ci
+  steps:
+   - uses: actions/checkout@v3
+     with:
+      token: ${{ secrets.PAT }}
 
-      - name: Format
-        run: npm exec turbo format
+   - uses: actions/setup-node@v3
+     with:
+      node-version: 16
+      cache: npm
 
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: 'refactor: run format'
+   - name: Install dependencies 📦
+     run: npm ci
 
-  svelte-check:
-    runs-on: ubuntu-latest
+   - name: Format
+     run: npm exec turbo format
 
-    name: Typecheck
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
+   - name: Commit changes
+     uses: stefanzweifel/git-auto-commit-action@v4
+     with:
+      commit_message: 'refactor: run format'
 
-      - name: Install dependencies 📦
-        run: npm ci
+ svelte-check:
+  runs-on: ubuntu-latest
 
-      - name: Svelte Check
-        run: npm exec turbo check
+  name: Typecheck
+  steps:
+   - uses: actions/checkout@v3
+
+   - uses: actions/setup-node@v3
+     with:
+      node-version: 16
+      cache: npm
+
+   - name: Install dependencies 📦
+     run: npm ci
+
+   - name: Svelte Check
+     run: npm exec turbo check
+     env:
+      POSTGRES_URL: ''

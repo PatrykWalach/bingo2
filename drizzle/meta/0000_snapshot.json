@@ -1,0 +1,381 @@
+{
+	"version": "5",
+	"dialect": "pg",
+	"id": "83e6b453-7c79-414c-afd3-eb732513cf49",
+	"prevId": "00000000-0000-0000-0000-000000000000",
+	"tables": {
+		"Room": {
+			"name": "Room",
+			"schema": "",
+			"columns": {
+				"code": {
+					"name": "code",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"state": {
+					"name": "state",
+					"type": "State",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "'SETUP'"
+				},
+				"isWithFreeTile": {
+					"name": "isWithFreeTile",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": false,
+					"default": false
+				},
+				"isWithHiddenBoards": {
+					"name": "isWithHiddenBoards",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": false,
+					"default": false
+				},
+				"winCodition": {
+					"name": "winCodition",
+					"type": "WinCondition",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "'FIRST_ROW'"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {}
+		},
+		"_BoardTileToRow": {
+			"name": "_BoardTileToRow",
+			"schema": "",
+			"columns": {
+				"rowId": {
+					"name": "rowId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"boardTileId": {
+					"name": "boardTileId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"_BoardTileToRow_rowId_boardTileId_key": {
+					"name": "_BoardTileToRow_rowId_boardTileId_key",
+					"columns": ["rowId", "boardTileId"],
+					"isUnique": true
+				}
+			},
+			"foreignKeys": {
+				"_BoardTileToRow_rowId_BoardRow_id_fk": {
+					"name": "_BoardTileToRow_rowId_BoardRow_id_fk",
+					"tableFrom": "_BoardTileToRow",
+					"tableTo": "BoardRow",
+					"columnsFrom": ["rowId"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"_BoardTileToRow_boardTileId_BoardTile_id_fk": {
+					"name": "_BoardTileToRow_boardTileId_BoardTile_id_fk",
+					"tableFrom": "_BoardTileToRow",
+					"tableTo": "BoardTile",
+					"columnsFrom": ["boardTileId"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {}
+		},
+		"BoardTile": {
+			"name": "BoardTile",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"tileId": {
+					"name": "tileId",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"playerRoomCode": {
+					"name": "playerRoomCode",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"playerUserSecret": {
+					"name": "playerUserSecret",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"index": {
+					"name": "index",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"BoardTile_tileId_Tile_id_fk": {
+					"name": "BoardTile_tileId_Tile_id_fk",
+					"tableFrom": "BoardTile",
+					"tableTo": "Tile",
+					"columnsFrom": ["tileId"],
+					"columnsTo": ["id"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"BoardTile_playerRoomCode_playerUserSecret_Player_roomCode_userSecret_fk": {
+					"name": "BoardTile_playerRoomCode_playerUserSecret_Player_roomCode_userSecret_fk",
+					"tableFrom": "BoardTile",
+					"tableTo": "Player",
+					"columnsFrom": ["playerRoomCode", "playerUserSecret"],
+					"columnsTo": ["roomCode", "userSecret"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"BoardTile_playerRoomCode_playerUserSecret_index_key": {
+					"name": "BoardTile_playerRoomCode_playerUserSecret_index_key",
+					"nullsNotDistinct": false,
+					"columns": ["playerRoomCode", "playerUserSecret", "index"]
+				},
+				"BoardTile_playerRoomCode_playerUserSecret_tileId_key": {
+					"name": "BoardTile_playerRoomCode_playerUserSecret_tileId_key",
+					"nullsNotDistinct": false,
+					"columns": ["playerRoomCode", "playerUserSecret", "tileId"]
+				}
+			}
+		},
+		"Player": {
+			"name": "Player",
+			"schema": "",
+			"columns": {
+				"roomCode": {
+					"name": "roomCode",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"userSecret": {
+					"name": "userSecret",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"color": {
+					"name": "color",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "'red'"
+				},
+				"avatar": {
+					"name": "avatar",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "'/wolf_64.png'"
+				},
+				"role": {
+					"name": "role",
+					"type": "Role",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "'PLAYER'"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"Player_roomCode_Room_code_fk": {
+					"name": "Player_roomCode_Room_code_fk",
+					"tableFrom": "Player",
+					"tableTo": "Room",
+					"columnsFrom": ["roomCode"],
+					"columnsTo": ["code"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				},
+				"Player_userSecret_User_secret_fk": {
+					"name": "Player_userSecret_User_secret_fk",
+					"tableFrom": "Player",
+					"tableTo": "User",
+					"columnsFrom": ["userSecret"],
+					"columnsTo": ["secret"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"Player_roomCode_userSecret": {
+					"name": "Player_roomCode_userSecret",
+					"columns": ["roomCode", "userSecret"]
+				}
+			},
+			"uniqueConstraints": {}
+		},
+		"BoardRow": {
+			"name": "BoardRow",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {}
+		},
+		"Tile": {
+			"name": "Tile",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"content": {
+					"name": "content",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"isComplete": {
+					"name": "isComplete",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": false,
+					"default": false
+				},
+				"roomCode": {
+					"name": "roomCode",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"userSecret": {
+					"name": "userSecret",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"createdAt": {
+					"name": "createdAt",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": false,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"Tile_roomCode_userSecret_Player_roomCode_userSecret_fk": {
+					"name": "Tile_roomCode_userSecret_Player_roomCode_userSecret_fk",
+					"tableFrom": "Tile",
+					"tableTo": "Player",
+					"columnsFrom": ["roomCode", "userSecret"],
+					"columnsTo": ["roomCode", "userSecret"],
+					"onDelete": "no action",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {}
+		},
+		"User": {
+			"name": "User",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"secret": {
+					"name": "secret",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"User_secret_key": {
+					"name": "User_secret_key",
+					"nullsNotDistinct": false,
+					"columns": ["secret"]
+				}
+			}
+		}
+	},
+	"enums": {
+		"Role": {
+			"name": "Role",
+			"values": {
+				"GAME_MASTER": "GAME_MASTER",
+				"PLAYER": "PLAYER"
+			}
+		},
+		"State": {
+			"name": "State",
+			"values": {
+				"SETUP": "SETUP",
+				"LOCKED": "LOCKED",
+				"RUNNING": "RUNNING",
+				"DONE": "DONE"
+			}
+		},
+		"WinCondition": {
+			"name": "WinCondition",
+			"values": {
+				"FIRST_ROW": "FIRST_ROW",
+				"ALL_ROWS": "ALL_ROWS"
+			}
+		}
+	},
+	"schemas": {},
+	"_meta": {
+		"schemas": {},
+		"tables": {},
+		"columns": {}
+	}
+}

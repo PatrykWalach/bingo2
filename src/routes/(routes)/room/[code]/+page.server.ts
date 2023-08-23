@@ -1,6 +1,9 @@
-import { Role, State, TOKEN } from '$lib/constants'
-import { Prisma, WinCondition } from '@prisma/client'
+import { State, TOKEN, WinCondition } from '$lib/constants'
+
+import { isGameMaster, throwIfNotFound } from '$lib/notFound'
+import { boardRow, boardTile, boardTileToRow, player, room, tile } from '$lib/schema.server'
 import { error, fail, redirect, type ServerLoad } from '@sveltejs/kit'
+import { and, eq, exists, inArray, ne, or, sql, type InferModel } from 'drizzle-orm'
 import { superValidate } from 'sveltekit-superforms/server'
 import { z } from 'zod'
 import type { Actions, RequestEvent } from './$types'
@@ -40,49 +43,53 @@ export const load: ServerLoad = (event) => {
 		unlockRoom: superValidate(unlockRoom, { id: 'unlockRoom' }),
 		startRoom: superValidate(startRoom, { id: 'startRoom' }),
 
-		Tiles: event.locals.db.tile.findMany({
-			where: {
-				roomCode: String(event.params.code)
-			},
-			orderBy: { createdAt: 'asc' },
-			select: {
-				content: true,
-				id: true,
-				isComplete: true,
-				author: {
-					select: {
-						avatar: true,
-						name: true,
-						user: {
-							select: {
-								id: true
+		Tiles: event.locals.db.query.tile
+			.findMany({
+				where: eq(tile.roomCode, String(event.params.code)),
+				columns: {
+					content: true,
+					id: true,
+					isComplete: true
+				},
+				orderBy: tile.createdAt,
+				with: {
+					author: {
+						columns: {
+							name: true
+						},
+						with: {
+							user: {
+								columns: { id: true }
 							}
 						}
 					}
 				}
-			}
-		}),
-		Viewer: event.locals.db.player
-			.findUniqueOrThrow({
-				where: {
-					roomCode_userSecret: {
-						roomCode: String(event.params.code),
-						userSecret: String(event.cookies.get(TOKEN))
-					}
-				},
+			})
+			.then(throwIfNotFound),
 
-				select: {
-					role: true,
-					user: { select: { id: true } },
+		Viewer: event.locals.db.query.player
+			.findFirst({
+				where: and(
+					eq(player.roomCode, String(event.params.code)),
+					eq(player.userSecret, String(event.cookies.get(TOKEN)))
+				),
+
+				columns: {
+					role: true
+				},
+				with: {
+					user: { columns: { id: true } },
 					room: {
-						select: {
+						with: {
 							players: {
-								select: {
+								columns: {
 									color: true,
 									avatar: true,
-									name: true,
+									name: true
+								},
+								with: {
 									user: {
-										select: {
+										columns: {
 											id: true
 										}
 									}
@@ -92,12 +99,7 @@ export const load: ServerLoad = (event) => {
 					}
 				}
 			})
-			.catch((e) => {
-				if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-					throw error(404, 'Sounds like skill issue!')
-				}
-				throw e
-			})
+			.then(throwIfNotFound)
 	}
 }
 
@@ -111,32 +113,34 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
-			await event.locals.db.tile.create({
-				data: {
-					author: {
-						connect: {
-							roomCode_userSecret: {
-								userSecret: secret,
-								roomCode: event.params.code
-							},
-							room: {
-								state: State.SETUP,
-								players: {
-									some: {
-										userSecret: secret
-									}
-								}
-							}
+		await event.locals.db.transaction(async (tx) => {
+			const player = await tx.query.player.findFirst({
+				where: (player) =>
+					and(eq(player.userSecret, secret), eq(player.roomCode, event.params.code)),
+				columns: {
+					roomCode: true,
+					userSecret: true
+				},
+				with: {
+					room: {
+						columns: {
+							state: true
 						}
-					},
-					content: form.data.content
+					}
 				}
 			})
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+
+			if (player?.room.state !== State.SETUP) {
+				throw error(400)
+			}
+
+			await tx.insert(tile).values({
+				content: form.data.content,
+				id: crypto.randomUUID(),
+				roomCode: player.roomCode,
+				userSecret: player.userSecret
+			})
+		})
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -151,42 +155,28 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
-			await event.locals.db.tile.delete({
-				where: {
-					id: form.data.id,
-					author: {
-						room: {
-							state: {
-								in: [State.SETUP, State.LOCKED]
-							}
-						}
-					},
-					OR: [
-						{
-							author: {
-								room: {
-									players: {
-										some: {
-											role: Role.GAME_MASTER,
-											userSecret: secret
-										}
-									}
-								}
-							}
-						},
-						{
-							author: {
-								userSecret: secret
-							}
-						}
-					]
-				}
-			})
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+		const isStateIn = (states: State[]) =>
+			exists(
+				event.locals.db
+					.select()
+					.from(room)
+					.where(and(eq(room.code, tile.roomCode), inArray(room.state, states)))
+			)
+
+		const isAuthor = eq(tile.userSecret, secret)
+
+		await event.locals.db
+			.delete(tile)
+			.where(
+				and(
+					eq(tile.id, form.data.id),
+					isStateIn([State.SETUP, State.LOCKED]),
+					or(
+						isGameMaster(event.locals.db, { userSecret: secret, roomCode: tile.roomCode }),
+						isAuthor
+					)
+				)
+			)
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -201,117 +191,85 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
-			await event.locals.db.$transaction(async (transaction) => {
-				const { isComplete, roomCode } = await transaction.tile.update({
-					data: {
-						isComplete: !form.data.isComplete
-					},
-					where: {
-						id: form.data.id,
-						author: {
-							room: {
-								state: {
-									not: State.DONE
-								}
-							}
-						},
-						OR: [
-							{
-								author: {
-									room: {
-										players: {
-											some: {
-												role: Role.GAME_MASTER,
-												userSecret: secret
-											}
-										}
-									}
-								}
-							},
-							{
-								author: {
-									userSecret: secret
-								}
-							}
-						]
-					}
+		await event.locals.db.transaction(async (tx) => {
+			const isNotDone = exists(
+				event.locals.db
+					.select()
+					.from(room)
+					.where(and(eq(room.code, tile.roomCode), ne(room.state, State.DONE)))
+			)
+
+			const isAuthor = eq(tile.userSecret, secret)
+
+			const [{ isComplete, roomCode }] = await event.locals.db
+				.update(tile)
+				.set({
+					isComplete: !form.data.isComplete
 				})
+				.where(
+					and(
+						eq(tile.id, form.data.id),
+						isNotDone,
+						or(
+							isGameMaster(event.locals.db, { userSecret: secret, roomCode: tile.roomCode }),
+							isAuthor
+						)
+					)
+				)
+				.returning({ isComplete: tile.isComplete, roomCode: tile.roomCode })
 
-				if (!isComplete) {
-					return
-				}
+			if (!isComplete) {
+				return
+			}
 
-				try {
-					await transaction.bingo.update({
-						data: { state: State.DONE },
-						where: {
-							state: State.RUNNING,
-							code: roomCode,
-							winCodition: WinCondition.FIRST_ROW,
-							players: {
-								some: {
-									board: {
-										some: {
-											rows: {
-												some: {
-													row: {
-														tiles: {
-															every: {
-																tile: {
-																	tile: { isComplete: true }
-																}
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					})
-				} catch (e) {
-					if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-						return
-					}
-					console.error(e)
-					throw e
-				}
+			await tx
+				.update(room)
+				.set({ state: State.DONE })
+				.where(
+					and(
+						eq(room.state, State.RUNNING),
+						eq(room.code, roomCode),
+						eq(room.winCodition, WinCondition.FIRST_ROW),
+						exists(
+							tx
+								.select()
+								.from(boardTileToRow)
+								.innerJoin(boardTile, eq(boardTile.id, boardTileToRow.boardTileId))
+								.innerJoin(tile, eq(tile.id, boardTile.tileId))
+								.where(eq(tile.roomCode, roomCode))
+								.groupBy(boardTileToRow.rowId)
+								.having(sql<boolean>`bool_and(${tile.isComplete}) is true`)
+						)
+					)
+				)
 
-				try {
-					await transaction.bingo.update({
-						data: { state: State.DONE },
-						where: {
-							state: State.RUNNING,
-							code: roomCode,
-							winCodition: WinCondition.ALL_ROWS,
-							players: {
-								some: {
-									board: {
-										every: {
-											tile: {
-												isComplete: true
-											}
-										}
-									}
-								}
-							}
-						}
-					})
-				} catch (e) {
-					if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2025') {
-						return
-					}
-					console.error(e)
-					throw e
-				}
-			})
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+			await tx
+				.update(room)
+				.set({ state: State.DONE })
+				.where(
+					and(
+						eq(room.state, State.RUNNING),
+						eq(room.code, roomCode),
+						eq(room.winCodition, WinCondition.ALL_ROWS),
+						exists(
+							tx
+								.select()
+								.from(player)
+								.innerJoin(
+									boardTile,
+									and(
+										eq(boardTile.playerRoomCode, player.roomCode),
+										eq(boardTile.playerUserSecret, player.userSecret)
+									)
+								)
+								.innerJoin(tile, eq(tile.id, boardTile.tileId))
+								.where(eq(tile.roomCode, roomCode))
+								.groupBy(player.userSecret)
+								.having(sql<boolean>`bool_and(${tile.isComplete}) is true`)
+						)
+					)
+				)
+		})
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -326,23 +284,18 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
-			await event.locals.db.bingo.update({
-				data: {
-					state: State.LOCKED
-				},
-				where: {
-					state: State.SETUP,
-					code: event.params.code,
-					players: {
-						some: { role: Role.GAME_MASTER, userSecret: secret }
-					}
-				}
+		await event.locals.db
+			.update(room)
+			.set({
+				state: State.LOCKED
 			})
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+			.where(
+				and(
+					eq(room.state, State.SETUP),
+					eq(room.code, event.params.code),
+					isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
+				)
+			)
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -357,23 +310,18 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
-			await event.locals.db.bingo.update({
-				data: {
-					state: State.SETUP
-				},
-				where: {
-					state: State.LOCKED,
-					code: event.params.code,
-					players: {
-						some: { role: Role.GAME_MASTER, userSecret: secret }
-					}
-				}
+		await event.locals.db
+			.update(room)
+			.set({
+				state: State.SETUP
 			})
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+			.where(
+				and(
+					eq(room.state, State.LOCKED),
+					eq(room.code, event.params.code),
+					isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
+				)
+			)
 
 		invalidateRoom(event, form.data.socketId)
 
@@ -388,97 +336,94 @@ export const actions: Actions = {
 
 		const secret = getSecretOrThrow(event)
 
-		try {
-			await event.locals.db.$transaction(async (transaction) => {
-				const bingo = await transaction.bingo.update({
-					data: {
-						state: State.RUNNING
-					},
-					where: {
-						state: State.LOCKED,
-						code: event.params.code,
-						players: {
-							some: { role: Role.GAME_MASTER, userSecret: secret }
-						}
-					},
-					include: {
-						players: true
-					}
+		await event.locals.db.transaction(async (tx) => {
+			const update = tx
+				.update(room)
+				.set({
+					state: State.RUNNING
 				})
+				.where(
+					and(
+						eq(room.state, State.LOCKED),
+						eq(room.code, event.params.code),
+						isGameMaster(event.locals.db, { userSecret: secret, roomCode: event.params.code })
+					)
+				)
+				.returning({ isWithFreeTile: room.isWithFreeTile })
 
-				const tiles = await transaction.tile.findMany({
-					where: { roomCode: event.params.code }
-				})
-
-				if (tiles.length < 25) {
-					throw error(400, 'At least 25 tiles are required!')
+			const players = await tx.query.player.findMany({
+				where: eq(player.roomCode, event.params.code),
+				columns: {
+					roomCode: true,
+					userSecret: true
 				}
-
-				const rows: Prisma.RowCreateManyInput[] = []
-				const boardTileToRows: Prisma.BoardTileToRowCreateManyInput[] = []
-				const boardTiles = bingo.players.flatMap((player) => {
-					const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
-					const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
-					const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
-
-					rows.push(...vertical.map((id) => ({ id })))
-					rows.push(...horizontal.map((id) => ({ id })))
-					rows.push(...diagonal.map((id) => ({ id })))
-
-					return getRandomElements(tiles, 25).map((tile, i) => {
-						const rows = [horizontal[Math.floor(i / 5)], vertical[i % 5]]
-
-						if (i % 5 === Math.floor(i / 5)) {
-							rows.push(diagonal[0])
-						}
-
-						if (4 - (i % 5) === Math.floor(i / 5)) {
-							rows.push(diagonal[1])
-						}
-
-						const id = crypto.randomUUID()
-						boardTileToRows.push(...rows.map((rowId) => ({ boardTileId: id, rowId })))
-						return Prisma.validator<Prisma.BoardTileCreateManyInput>()({
-							id,
-							index: i,
-							tileId: tile.id,
-							roomCode: player.roomCode,
-							userSecret: player.userSecret
-						})
-					})
-				})
-
-				if (bingo.isWithFreeTile) {
-					const freeTile = await transaction.tile.create({
-						data: {
-							content: 'Free',
-							isComplete: true,
-							author: {
-								connect: {
-									roomCode_userSecret: {
-										roomCode: event.params.code,
-										userSecret: secret
-									}
-								}
-							}
-						}
-					})
-
-					for (const boardTile of boardTiles.filter(({ index }) => index === 12)) {
-						boardTile.tileId = freeTile.id
-					}
-				}
-
-				await Promise.all([
-					transaction.boardTile.createMany({ data: boardTiles }),
-					transaction.row.createMany({ data: rows })
-				])
-				await transaction.boardTileToRow.createMany({ data: boardTileToRows })
 			})
-		} catch (e) {
-			console.error(e)
-			throw e
-		}
+
+			const tiles = await tx.query.tile.findMany({
+				where: eq(tile.roomCode, event.params.code)
+			})
+
+			if (tiles.length < 25) {
+				throw error(400, 'At least 25 tiles are required!')
+			}
+
+			const rows: InferModel<typeof boardRow, 'insert'>[] = []
+			const boardTileToRows: InferModel<typeof boardTileToRow, 'insert'>[] = []
+			const boardTiles = players.flatMap((player) => {
+				const vertical = Array.from({ length: 5 }, () => crypto.randomUUID())
+				const horizontal = Array.from({ length: 5 }, () => crypto.randomUUID())
+				const diagonal = Array.from({ length: 2 }, () => crypto.randomUUID())
+
+				rows.push(...vertical.map((id) => ({ id })))
+				rows.push(...horizontal.map((id) => ({ id })))
+				rows.push(...diagonal.map((id) => ({ id })))
+
+				return getRandomElements(tiles, 25).map((tile, i) => {
+					const rows = [horizontal[Math.floor(i / 5)], vertical[i % 5]]
+
+					if (i % 5 === Math.floor(i / 5)) {
+						rows.push(diagonal[0])
+					}
+
+					if (4 - (i % 5) === Math.floor(i / 5)) {
+						rows.push(diagonal[1])
+					}
+
+					const id = crypto.randomUUID()
+					boardTileToRows.push(...rows.map((rowId) => ({ boardTileId: id, rowId })))
+
+					return {
+						id,
+						index: i,
+						tileId: tile.id,
+						playerRoomCode: player.roomCode,
+						playerUserSecret: player.userSecret
+					} satisfies InferModel<typeof boardTile, 'insert'>
+				})
+			})
+
+			const [bingo] = await update
+
+			if (bingo.isWithFreeTile) {
+				const id = crypto.randomUUID()
+
+				await tx.insert(tile).values({
+					content: 'Free',
+					isComplete: true,
+					roomCode: event.params.code,
+					userSecret: secret,
+					id
+				})
+
+				for (const boardTile of boardTiles.filter(({ index }) => index === 12)) {
+					boardTile.tileId = id
+				}
+			}
+
+			await Promise.all([tx.insert(boardTile).values(boardTiles), tx.insert(boardRow).values(rows)])
+
+			await tx.insert(boardTileToRow).values(boardTileToRows)
+		})
 
 		invalidateRoom(event, form.data.socketId)
 

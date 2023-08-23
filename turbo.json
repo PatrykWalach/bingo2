@@ -4,9 +4,11 @@
 		"ORIGIN",
 		"PORT",
 		"HOST",
-		"POSTGRES_PRISMA_URL",
-		"POSTGRES_URL_NON_POOLING",
-		"VERCEL"
+		"POSTGRES_HOST",
+		"POSTGRES_PASSWORD",
+		"POSTGRES_USER",
+		"POSTGRES_DATABASE",
+		"POSTGRES_URL"
 	],
 	"pipeline": {
 		"build": {
@@ -17,8 +19,7 @@
 				"tailwind.config.ts",
 				"svelte.config.js",
 				"postcss.config.cjs"
-			],
-			"dependsOn": ["migrate"]
+			]
 		},
 		"lint": {},
 		"test": {
@@ -32,15 +33,12 @@
 		"sync": { "outputs": [".svelte-kit/**"] },
 		"dev": {
 			"cache": false,
-			"persistent": true,
-			"dependsOn": ["migrate"]
+			"persistent": true
 		},
-		"migrate": { "inputs": ["prisma/schema.prisma"], "cache": false },
+		"migrate": { "dependsOn": ["generate"] },
 		"generate": {
-			"inputs": ["prisma/schema.prisma"],
-			"outputs": ["node_modules/@prisma/client/**"],
-			"env": ["PRISMA_GENERATE_DATAPROXY"],
-			"cache": false
+			"inputs": ["src/lib/schema.server.ts"],
+			"outputs": ["drizzle/**"]
 		},
 		"preview": {
 			"cache": false,
