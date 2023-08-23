@@ -18,6 +18,7 @@
 	"devDependencies": {
 		"@faker-js/faker": "^8.0.2",
 		"@playwright/test": "^1.36.1",
+		"@sveltejs/adapter-vercel": "^3.0.3",
 		"@sveltejs/kit": "^1.22.3",
 		"@typescript-eslint/eslint-plugin": "^6.0.0",
 		"@typescript-eslint/parser": "^6.0.0",
@@ -43,7 +44,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@sveltejs/adapter-vercel": "^3.0.3",
 		"@vercel/postgres": "^0.4.1",
 		"crypto.web.js": "^1.0.2",
 		"drizzle-orm": "^0.28.2",
