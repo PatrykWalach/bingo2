@@ -46,7 +46,7 @@
 	"dependencies": {
 		"@vercel/postgres": "^0.4.1",
 		"crypto.web.js": "^1.0.2",
-		"drizzle-orm": "^0.28.2",
+		"drizzle-orm": "0.28.2",
 		"pusher-js": "^8.2.0",
 		"sveltekit-superforms": "^1.3.0",
 		"zod": "^3.21.4"
