@@ -41,7 +41,7 @@ jobs:
           key: playwright-${{ env.PLAYWRIGHT_VERSION }}
 
       - name: Install dependencies 📦
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Install Playwright
         run: npx playwright install --with-deps
@@ -76,7 +76,7 @@ jobs:
 
 
       - name: Install dependencies 📦
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Lint
         run: bunx turbo lint
@@ -96,7 +96,7 @@ jobs:
 
 
       - name: Install dependencies 📦
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Format
         run: bunx turbo format
@@ -116,7 +116,7 @@ jobs:
 
 
       - name: Install dependencies 📦
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Svelte Check
         run: bunx turbo check
