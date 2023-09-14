@@ -1,4 +1,7 @@
 import { devices, PlaywrightTestConfig } from '@playwright/test'
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
 import * as dotenv from 'dotenv'
 dotenv.config()
 
@@ -7,7 +10,7 @@ const url =
 
 const config: PlaywrightTestConfig = {
 	webServer: {
-		command: 'npx turbo preview',
+		command: process.env.CI ? 'bunx turbo preview' : 'npx turbo preview',
 		url,
 		timeout: 3 * 60 * 1000,
 		reuseExistingServer: !process.env.CI
@@ -37,7 +40,7 @@ const config: PlaywrightTestConfig = {
 		baseURL: url,
 		video: 'retain-on-failure'
 	},
-	testDir: 'tests',
+	testDir: join(dirname(fileURLToPath(import.meta.url)), 'tests'),
 	projects: [
 		{
 			name: 'default'

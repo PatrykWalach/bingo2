@@ -25,10 +25,7 @@ jobs:
     name: E2E
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
+      - uses: oven-sh/setup-bun@v1
 
       - name: Get installed Playwright version
         id: playwright-version
@@ -43,7 +40,7 @@ jobs:
           key: playwright-${{ env.PLAYWRIGHT_VERSION }}
 
       - name: Install dependencies 📦
-        run: npm ci
+        run: bun install
 
       - name: Install Playwright
         run: npx playwright install --with-deps
@@ -56,7 +53,7 @@ jobs:
           postgresql db: devdb
 
       - name: Run E2E tests 🧪
-        run: npm exec turbo test -- -- --project=${{ matrix.project }}
+        run: bunx turbo test -- -- --project=${{ matrix.project }}
         env:
           POSTGRES_PRISMA_URL: postgres://postgres:dipping-culture@localhost:5432/devdb
           POSTGRES_URL_NON_POOLING: postgres://postgres:dipping-culture@localhost:5432/devdb
@@ -74,16 +71,13 @@ jobs:
     name: Lint
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
+      - uses: oven-sh/setup-bun@v1
 
       - name: Install dependencies 📦
-        run: npm ci
+        run: bun install
 
       - name: Lint
-        run: npm exec turbo lint
+        run: bunx turbo lint
 
   format:
     runs-on: ubuntu-latest
@@ -96,16 +90,13 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
+      - uses: oven-sh/setup-bun@v1
 
       - name: Install dependencies 📦
-        run: npm ci
+        run: bun install
 
       - name: Format
-        run: npm exec turbo format
+        run: bunx turbo format
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v4
@@ -118,13 +109,10 @@ jobs:
     name: Typecheck
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
+      - uses: oven-sh/setup-bun@v1
 
       - name: Install dependencies 📦
-        run: npm ci
+        run: bun install
 
       - name: Svelte Check
-        run: npm exec turbo check
+        run: bunx turbo check
