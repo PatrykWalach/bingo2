@@ -1,6 +1,6 @@
 import { devices, PlaywrightTestConfig } from '@playwright/test'
-import { join ,dirname} from 'path'
-import {fileURLToPath} from 'url';
+import { join, dirname } from 'path'
+import { fileURLToPath } from 'url'
 
 import * as dotenv from 'dotenv'
 dotenv.config()
