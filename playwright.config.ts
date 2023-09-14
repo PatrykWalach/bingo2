@@ -1,4 +1,7 @@
 import { devices, PlaywrightTestConfig } from '@playwright/test'
+import { join ,dirname} from 'path'
+import {fileURLToPath} from 'url';
+
 import * as dotenv from 'dotenv'
 dotenv.config()
 
@@ -37,7 +40,7 @@ const config: PlaywrightTestConfig = {
 		baseURL: url,
 		video: 'retain-on-failure'
 	},
-	testDir: 'tests',
+	testDir: join(dirname(fileURLToPath(import.meta.url)), 'tests'),
 	projects: [
 		{
 			name: 'default'
